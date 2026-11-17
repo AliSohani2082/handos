@@ -2,7 +2,7 @@
 name = "two-hand-spike"
 version = "0.0.0"
 description = "handOs spike 1: can MediaPipe follow both hands through the palm-touch gesture?"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dependencies = [
     "mediapipe>=0.10.14",
     "opencv-python>=4.9",
