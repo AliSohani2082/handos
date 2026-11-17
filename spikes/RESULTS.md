@@ -6,8 +6,8 @@ Machine: Intel i7-8550U (4 cores, 2018), `powersave` governor, Hyprland 0.57.2, 
 | Spike | Verdict | One line |
 |---|---|---|
 | 1. Two-hand tracking | **GO** | Palm touch 50 of 50, pluck 49 of 50, no swaps, no dropout over 150 ms; tracker runs at only 15 fps on this CPU |
-| 2. Overlay cost | **NO-GO** on CPU and frame time | RSS passes; CPU 24% against a 3% bar |
-| 3. Input and text | Clicks **GO**; text nearly GO | 56 of 56 clicks at 0 px; keymap typing exact in terminal, Qt and GTK (both languages); browser English needs a rerun; paste fails everywhere |
+| 2. Overlay cost | CPU drawing **NO-GO**; GPU drawing **GO at tracking rate** | tiny-skia 24–26%; wgpu 6.8% at 60 fps and 2.4% at 18 fps; Hyprland adds 4–10% either way |
+| 3. Input and text | **GO** | 56 of 56 clicks at 0 px; keymap typing exact in all four apps in both languages; paste fails everywhere |
 | 4. Script runtime | **GO** | 10 attacks survived; reload 0.7 ms; memory flat |
 
 ## Spike 1: two-hand tracking — GO
@@ -52,7 +52,35 @@ Pass bar: RSS 40 MB or less (passes in every configuration), CPU 3% or less (fai
   hyprctl reload
   ```
 
-Per the plan, the next step is the plan's fallback, "try a GPU path". That is your call. ADR 5 ("Reopen if spike 2 misses its bar") is now triggered.
+ADR 5 ("Reopen if spike 2 misses its bar") is triggered. The plan's fallback, a GPU path, is measured below.
+
+### Follow-up: GPU drawing (wgpu, Vulkan) — GO when drawing at tracking rate
+
+`spikes/overlay-gpu` draws the same two moving skeletons on the same click-through overlay (one output, frame callbacks). Every line and joint is one instanced quad, anti-aliased in the fragment shader by distance to the segment, so a frame is a single draw call. The adapter is the Intel UHD 620 (Mesa, Vulkan, Mailbox, premultiplied alpha). `measure.sh` also reports Hyprland's CPU over the same 20 s, because a GPU surface is damaged in full on every frame. With nothing on screen, Hyprland uses 2.6% of a core.
+
+| Configuration | Frames/s | Overlay CPU | CPU per frame p50 / p99 | RSS max | Hyprland CPU | Bar |
+|---|---|---|---|---|---|---|
+| tiny-skia (spike 2, rerun under `measure.sh`) | 60 | 26.0% | 4.80 / 7.61 ms | 17.7 MiB | 15.0% | NO-GO |
+| wgpu, every frame, all Vulkan drivers loaded | 58 | 6.5% | 1.10 / 1.66 ms | **69.0 MiB** | 12.6% | NO-GO |
+| wgpu, every frame, Intel driver only | 59 | 6.8% | 1.10 / 1.52 ms | 24.7 MiB | 12.8% | NO-GO (CPU) |
+| wgpu, about every 2nd frame | 39 | 4.9% | 1.26 / 1.71 ms | 24.7 MiB | 14.3% | NO-GO (CPU) |
+| wgpu, every 4th frame | 18 | **2.4%** | 1.27 / 1.63 ms | 24.6 MiB | 7.3% | **GO** |
+
+- **The GPU cuts the overlay's own CPU by four times** at the same frame rate (26% to 6.8%), and CPU time per frame meets the 2 ms bar in every GPU configuration.
+- **Load only the Intel Vulkan driver.** By default the Vulkan loader also loads NVIDIA's driver on this hybrid laptop, which adds 44 MiB and fails the RSS bar. With `VK_DRIVER_FILES=/usr/share/vulkan/icd.d/intel_icd.json`, RSS is 24.7 MiB. The daemon has to pick the driver itself (or the integrated GPU's device), not leave it to the loader.
+- **3% is met only when frames follow tracking, not the display.** At about 18 frames/s, the rate of the 15 fps tracker from spike 1, the overlay uses 2.4%. Drawing at 60 fps only interpolates between tracker frames, at roughly three times the cost.
+- **The compositor cost is as large as the overlay's own and is not counted by the 3% bar.** Hyprland uses about 10% of a core above idle to composite a full-screen overlay at 60 fps, and about 4.6% at 18 fps, whichever renderer draws it. The PRD's "two-hand CPU ≤ 35% core (tracker + daemon)" budget leaves this out.
+- **GL did not work.** wgpu's GL backend found no adapter compatible with the surface (it needs the Wayland display handle at instance creation, which this spike does not pass). It was not pursued, because Vulkan works.
+
+**Recommendation for M1 (ADR 5):** draw with wgpu on Vulkan, explicitly on the integrated GPU; draw a frame only when a new HandFrame arrives (or a visible animation is running); and show nothing (no commits) when no hand is shown. Add compositor CPU to the overlay budget, or state that it is excluded.
+
+Commands:
+
+```bash
+spikes/overlay-gpu/measure.sh sleep 20      # Hyprland's idle CPU
+VK_DRIVER_FILES=/usr/share/vulkan/icd.d/intel_icd.json \
+  spikes/overlay-gpu/measure.sh spikes/target/release/overlay-gpu --synthetic --seconds 20 [--every 4] [--json out.json]
+```
 
 Commands:
 
@@ -84,19 +112,18 @@ Results from all runs. Runs where focus moved to another window part-way through
 | Terminal (kitty) | exact | exact | **fails** (empty) |
 | Qt (kdialog) | exact (3 of 3 runs) | exact (3 of 3 runs) | **fails** (empty) |
 | GTK 4 entry | exact | exact | **fails** (empty) |
-| Browser (Chromium form field) | needs a clean rerun* | exact, after the fix below | **fails** (empty) |
+| Browser (Chromium form field) | exact (rerun with the machine idle)* | exact, after the fix below | **fails** (empty) |
 
-*Before the fix it dropped the comma. After the fix, its only run came back empty in the run where focus kept moving, so that result is inconclusive.
+*Before the fix it dropped the comma. The first run after the fix was disturbed by focus changes; the rerun with nobody at the keyboard was exact for both sentences (`results/input-text-browser.jsonl`).
 
 **Bug found and fixed: key codes have meanings of their own.** The first keymap gave characters codes 1, 2, 3… in order. Chromium treats some evdev codes by their physical meaning, whatever keysym the keymap puts there. «ت» landed on code 14 (Backspace) and deleted the «م» before it. The comma landed on 29 (Left Ctrl) and vanished. `wtype` numbers keys the same way. Characters now go only on ordinary character-key codes (47 of them, plus Space), and Return, Control and Shift sit on their real codes. Text with more distinct characters is split across keymaps.
 
 **Paste is not working yet.** `wl-copy` sets the clipboard correctly (`wl-paste` reads it back). Ctrl+V does nothing in any of the four apps, including with real Control key presses on the correct code. A Ctrl+A test with `wtype` lost the keys sent after the modifier. Paste was the plan's fallback, not the main path. On the evidence so far, keymap typing is the method that works, and paste needs its own investigation.
 
-**Verdict so far:** the pass bar is "both sentences correct in all four applications by at least one method". Keymap typing has met it in the terminal, Qt and GTK, and in the browser for Persian. Only Browser English is missing for a GO. Rerun it while you're away from the keyboard, because the guard refuses whenever another window takes focus:
+**Verdict: GO.** The pass bar is "both sentences correct in all four applications by at least one method". Keymap typing meets it in all four. Paste, the plan's fallback, does not work yet and needs its own investigation if it is wanted.
 
 ```bash
-APPS=browser METHODS=keymap spikes/input/harness/text_matrix.sh spikes/results/input-text-browser.jsonl
-spikes/input/harness/text_matrix.sh   # full matrix, about 3 minutes
+spikes/input/harness/text_matrix.sh   # full matrix, about 3 minutes; run with nobody at the keyboard
 ```
 
 ## Spike 4: script runtime — GO
