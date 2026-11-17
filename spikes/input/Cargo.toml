@@ -1,0 +1,13 @@
+[package]
+name = "input-spike"
+version = "0.0.0"
+edition.workspace = true
+publish.workspace = true
+
+[dependencies]
+smithay-client-toolkit.workspace = true
+wayland-client.workspace = true
+wayland-protocols-wlr.workspace = true
+wayland-protocols-misc.workspace = true
+serde_json.workspace = true
+libc.workspace = true
