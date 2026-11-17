@@ -1,7 +1,7 @@
 # Throwaway M0 spikes. Deleted when M1 begins (see .claude/plans/handos-m0-spikes.plan.md).
 [workspace]
 resolver = "3"
-members = ["overlay", "input", "luau"]
+members = ["overlay", "overlay-gpu", "input", "luau"]
 
 [workspace.package]
 edition = "2024"

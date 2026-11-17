@@ -1,0 +1,26 @@
+{
+  "adapter": "Intel(R) UHD Graphics 620 (KBL GT2)",
+  "backend": "Vulkan",
+  "cpu_pct": 6.501319318146997,
+  "frame_ms": {
+    "max": 2.086623,
+    "n": 1048,
+    "p50": 1.09477,
+    "p95": 1.356767,
+    "p99": 1.6607169999999998
+  },
+  "frames_per_s": 58.23403970442781,
+  "go": false,
+  "output": "eDP-1",
+  "present_mode": "Mailbox",
+  "rss_before_gpu_mib": 4.23046875,
+  "rss_end_mib": 69.01171875,
+  "rss_max_mib": 69.01171875,
+  "seconds": 17.996347245,
+  "size": [
+    1920,
+    1080
+  ],
+  "skipped": 0,
+  "trace": null
+}
