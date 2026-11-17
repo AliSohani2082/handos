@@ -1,0 +1,1164 @@
+[
+  {
+    "file": "data/palm-good-20261117-131354.jsonl",
+    "task": "palm",
+    "light": "good",
+    "frames": 2412,
+    "fps": 15.4,
+    "inference_ms_p50": 30.6,
+    "inference_ms_p95": 47.7,
+    "reps": 50,
+    "recognised": 50,
+    "reps_with_swap": 0,
+    "reps_with_long_dropout": 0,
+    "passed": 50,
+    "pass_bar": 45,
+    "verdict": "GO",
+    "raw_jitter_px": 200.86,
+    "filter_best": {
+      "min_cutoff": 4.0,
+      "beta": 0.1,
+      "jitter_px": 201.64512740522034,
+      "lag_px": 1.2080952272559393
+    },
+    "facing_sign_by_label": {
+      "Left": 1.0,
+      "Right": -1.0
+    },
+    "rep_detail": [
+      {
+        "i": 0,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 1,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 2,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 3,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 4,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 5,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 6,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 7,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 8,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 9,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 10,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 11,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 12,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 13,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 14,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 15,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 16,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 17,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 18,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 19,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 20,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 21,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 22,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 23,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 24,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 25,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 26,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 27,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 28,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 29,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 30,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 31,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 32,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 33,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 34,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 35,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 36,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 37,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 38,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 39,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 40,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 41,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 42,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 43,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 44,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 45,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 46,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 47,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 48,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 49,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      }
+    ],
+    "filter_grid": [
+      {
+        "min_cutoff": 0.3,
+        "beta": 0.0,
+        "jitter_px": 213.31977905963078,
+        "lag_px": 71.56918585474465
+      },
+      {
+        "min_cutoff": 0.3,
+        "beta": 0.001,
+        "jitter_px": 223.16303534314164,
+        "lag_px": 23.612786149933154
+      },
+      {
+        "min_cutoff": 0.3,
+        "beta": 0.005,
+        "jitter_px": 210.9229461189953,
+        "lag_px": 10.613727470716377
+      },
+      {
+        "min_cutoff": 0.3,
+        "beta": 0.02,
+        "jitter_px": 204.57496521019132,
+        "lag_px": 4.761775809911172
+      },
+      {
+        "min_cutoff": 0.3,
+        "beta": 0.1,
+        "jitter_px": 201.77751429845475,
+        "lag_px": 1.6775452637197887
+      },
+      {
+        "min_cutoff": 0.5,
+        "beta": 0.0,
+        "jitter_px": 228.86559121135838,
+        "lag_px": 53.96100967918378
+      },
+      {
+        "min_cutoff": 0.5,
+        "beta": 0.001,
+        "jitter_px": 221.7584943811733,
+        "lag_px": 21.46514330757108
+      },
+      {
+        "min_cutoff": 0.5,
+        "beta": 0.005,
+        "jitter_px": 210.46927021482188,
+        "lag_px": 10.037456921830403
+      },
+      {
+        "min_cutoff": 0.5,
+        "beta": 0.02,
+        "jitter_px": 204.4806715448199,
+        "lag_px": 4.583167869474392
+      },
+      {
+        "min_cutoff": 0.5,
+        "beta": 0.1,
+        "jitter_px": 201.76583839531182,
+        "lag_px": 1.6375827312814197
+      },
+      {
+        "min_cutoff": 1.0,
+        "beta": 0.0,
+        "jitter_px": 228.77945394490322,
+        "lag_px": 32.16395693999045
+      },
+      {
+        "min_cutoff": 1.0,
+        "beta": 0.001,
+        "jitter_px": 218.81633351452894,
+        "lag_px": 17.460435139513983
+      },
+      {
+        "min_cutoff": 1.0,
+        "beta": 0.005,
+        "jitter_px": 209.5749271451604,
+        "lag_px": 8.876775805766117
+      },
+      {
+        "min_cutoff": 1.0,
+        "beta": 0.02,
+        "jitter_px": 204.2819118690427,
+        "lag_px": 4.205588320418563
+      },
+      {
+        "min_cutoff": 1.0,
+        "beta": 0.1,
+        "jitter_px": 201.74021738454474,
+        "lag_px": 1.5485880051724286
+      },
+      {
+        "min_cutoff": 2.0,
+        "beta": 0.0,
+        "jitter_px": 220.19537467788138,
+        "lag_px": 17.709249663448713
+      },
+      {
+        "min_cutoff": 2.0,
+        "beta": 0.001,
+        "jitter_px": 214.7287316550059,
+        "lag_px": 12.578609458500887
+      },
+      {
+        "min_cutoff": 2.0,
+        "beta": 0.005,
+        "jitter_px": 208.3276990073056,
+        "lag_px": 7.265695076491121
+      },
+      {
+        "min_cutoff": 2.0,
+        "beta": 0.02,
+        "jitter_px": 203.9871149727873,
+        "lag_px": 3.652545670638272
+      },
+      {
+        "min_cutoff": 2.0,
+        "beta": 0.1,
+        "jitter_px": 201.70020181436308,
+        "lag_px": 1.4059345039283568
+      },
+      {
+        "min_cutoff": 4.0,
+        "beta": 0.0,
+        "jitter_px": 212.32055961943794,
+        "lag_px": 9.404995483401946
+      },
+      {
+        "min_cutoff": 4.0,
+        "beta": 0.001,
+        "jitter_px": 210.25680404674887,
+        "lag_px": 7.9280190963390105
+      },
+      {
+        "min_cutoff": 4.0,
+        "beta": 0.005,
+        "jitter_px": 206.74377847859608,
+        "lag_px": 5.376695431241377
+      },
+      {
+        "min_cutoff": 4.0,
+        "beta": 0.02,
+        "jitter_px": 203.592520142583,
+        "lag_px": 2.9604410060735837
+      },
+      {
+        "min_cutoff": 4.0,
+        "beta": 0.1,
+        "jitter_px": 201.64512740522034,
+        "lag_px": 1.2080952272559393
+      }
+    ]
+  },
+  {
+    "file": "data/pluck-good-20261117-132044.jsonl",
+    "task": "pluck",
+    "light": "good",
+    "frames": 2406,
+    "fps": 15.4,
+    "inference_ms_p50": 30.6,
+    "inference_ms_p95": 48.3,
+    "reps": 50,
+    "recognised": 49,
+    "reps_with_swap": 0,
+    "reps_with_long_dropout": 0,
+    "passed": 49,
+    "pass_bar": 45,
+    "verdict": null,
+    "raw_jitter_px": 15.05,
+    "filter_best": {
+      "min_cutoff": 0.3,
+      "beta": 0.0,
+      "jitter_px": 13.426305135474008,
+      "lag_px": 77.7678156348183
+    },
+    "facing_sign_by_label": {
+      "Right": -1.0,
+      "Left": 1.0
+    },
+    "rep_detail": [
+      {
+        "i": 0,
+        "recognised": false,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": false
+      },
+      {
+        "i": 1,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 2,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 3,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 4,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 5,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 6,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 7,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 8,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 9,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 10,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 11,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 12,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 13,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 14,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 15,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 16,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 17,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 18,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 19,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 20,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 21,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 22,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 23,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 24,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 25,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 26,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 27,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 28,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 29,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 30,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 31,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 32,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 33,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 34,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 35,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 36,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 37,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 38,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 39,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 40,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 41,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 42,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 43,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 44,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 45,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 46,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 47,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 48,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      },
+      {
+        "i": 49,
+        "recognised": true,
+        "swaps": 0,
+        "longest_dropout_ms": 0.0,
+        "two_hand_fraction": 1.0,
+        "passed": true
+      }
+    ],
+    "filter_grid": [
+      {
+        "min_cutoff": 0.3,
+        "beta": 0.0,
+        "jitter_px": 13.426305135474008,
+        "lag_px": 77.7678156348183
+      },
+      {
+        "min_cutoff": 0.3,
+        "beta": 0.001,
+        "jitter_px": 14.316878368254544,
+        "lag_px": 29.670695661021664
+      },
+      {
+        "min_cutoff": 0.3,
+        "beta": 0.005,
+        "jitter_px": 15.039881638308156,
+        "lag_px": 13.394063970987252
+      },
+      {
+        "min_cutoff": 0.3,
+        "beta": 0.02,
+        "jitter_px": 15.141500487641368,
+        "lag_px": 5.7482589055120785
+      },
+      {
+        "min_cutoff": 0.3,
+        "beta": 0.1,
+        "jitter_px": 15.150855087630871,
+        "lag_px": 1.8325355076736796
+      },
+      {
+        "min_cutoff": 0.5,
+        "beta": 0.0,
+        "jitter_px": 13.91374883572143,
+        "lag_px": 61.1973689488734
+      },
+      {
+        "min_cutoff": 0.5,
+        "beta": 0.001,
+        "jitter_px": 14.566192877678871,
+        "lag_px": 27.01034484581051
+      },
+      {
+        "min_cutoff": 0.5,
+        "beta": 0.005,
+        "jitter_px": 15.003748266835352,
+        "lag_px": 12.684814776707444
+      },
+      {
+        "min_cutoff": 0.5,
+        "beta": 0.02,
+        "jitter_px": 15.120976981705056,
+        "lag_px": 5.559514966147935
+      },
+      {
+        "min_cutoff": 0.5,
+        "beta": 0.1,
+        "jitter_px": 15.143925435087494,
+        "lag_px": 1.798751666683949
+      },
+      {
+        "min_cutoff": 1.0,
+        "beta": 0.0,
+        "jitter_px": 14.65603610419952,
+        "lag_px": 38.20919352143815
+      },
+      {
+        "min_cutoff": 1.0,
+        "beta": 0.001,
+        "jitter_px": 14.79600240277857,
+        "lag_px": 21.908569056180827
+      },
+      {
+        "min_cutoff": 1.0,
+        "beta": 0.005,
+        "jitter_px": 14.978196828506457,
+        "lag_px": 11.225975817292882
+      },
+      {
+        "min_cutoff": 1.0,
+        "beta": 0.02,
+        "jitter_px": 15.090037605367664,
+        "lag_px": 5.148798714344198
+      },
+      {
+        "min_cutoff": 1.0,
+        "beta": 0.1,
+        "jitter_px": 15.129331045847902,
+        "lag_px": 1.721970413779331
+      },
+      {
+        "min_cutoff": 2.0,
+        "beta": 0.0,
+        "jitter_px": 14.913120404544864,
+        "lag_px": 21.45454296776958
+      },
+      {
+        "min_cutoff": 2.0,
+        "beta": 0.001,
+        "jitter_px": 14.938973755203577,
+        "lag_px": 15.64193882040893
+      },
+      {
+        "min_cutoff": 2.0,
+        "beta": 0.005,
+        "jitter_px": 14.997377870786385,
+        "lag_px": 9.163552521122877
+      },
+      {
+        "min_cutoff": 2.0,
+        "beta": 0.02,
+        "jitter_px": 15.066376344147994,
+        "lag_px": 4.517624787872215
+      },
+      {
+        "min_cutoff": 2.0,
+        "beta": 0.1,
+        "jitter_px": 15.10843209447343,
+        "lag_px": 1.5943628370602616
+      },
+      {
+        "min_cutoff": 4.0,
+        "beta": 0.0,
+        "jitter_px": 15.01264690262442,
+        "lag_px": 11.378222666836546
+      },
+      {
+        "min_cutoff": 4.0,
+        "beta": 0.001,
+        "jitter_px": 15.016819472937952,
+        "lag_px": 9.730701338886544
+      },
+      {
+        "min_cutoff": 4.0,
+        "beta": 0.005,
+        "jitter_px": 15.02986146583238,
+        "lag_px": 6.7187659334205465
+      },
+      {
+        "min_cutoff": 4.0,
+        "beta": 0.02,
+        "jitter_px": 15.05551621925758,
+        "lag_px": 3.6874264208984604
+      },
+      {
+        "min_cutoff": 4.0,
+        "beta": 0.1,
+        "jitter_px": 15.084826649690568,
+        "lag_px": 1.4068053337862714
+      }
+    ]
+  }
+]

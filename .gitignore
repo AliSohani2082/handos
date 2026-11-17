@@ -1,0 +1,8 @@
+/target/
+spikes/target/
+.venv/
+__pycache__/
+.pytest_cache/
+spikes/two-hand/models/
+# raw camera video stays local; landmark traces (*.jsonl) are kept
+spikes/two-hand/data/*.mp4

@@ -1,0 +1,17 @@
+[
+{"attack":"endless_loop","ended":true,"stopped":true,"error":"runtime error: script exceeded its 50 ms budget","elapsed_ms":50.1,"max_turn_ms":50.1,"mem_before_kib":620,"mem_after_kib":572,"vm_usable_after":true,"rss_kib":7496},
+{"attack":"endless_loop_in_pcall","ended":true,"stopped":true,"error":"runtime error: script exceeded its 50 ms budget","elapsed_ms":50.1,"max_turn_ms":50.1,"mem_before_kib":620,"mem_after_kib":572,"vm_usable_after":true,"rss_kib":7476},
+{"attack":"memory_bomb","ended":true,"stopped":true,"error":"memory error: not enough memory","elapsed_ms":25.2,"max_turn_ms":25.2,"mem_before_kib":620,"mem_after_kib":576,"vm_usable_after":true,"rss_kib":7520},
+{"attack":"memory_bomb_in_pcall","ended":true,"stopped":true,"error":"runtime error: script exceeded its 50 ms budget","elapsed_ms":50.1,"max_turn_ms":50.1,"mem_before_kib":620,"mem_after_kib":572,"vm_usable_after":true,"rss_kib":7668},
+{"attack":"string_doubling","ended":true,"stopped":true,"error":"memory error: not enough memory","elapsed_ms":5.0,"max_turn_ms":5.0,"mem_before_kib":620,"mem_after_kib":572,"vm_usable_after":true,"rss_kib":7720},
+{"attack":"deep_recursion","ended":true,"stopped":true,"error":"runtime error: deep_recursion:1: stack overflow","elapsed_ms":14.6,"max_turn_ms":13.7,"mem_before_kib":620,"mem_after_kib":572,"vm_usable_after":true,"rss_kib":7748},
+{"attack":"deep_recursion_at_memory_limit","ended":true,"stopped":true,"error":"memory error: not enough memory","elapsed_ms":31.9,"max_turn_ms":31.9,"mem_before_kib":620,"mem_after_kib":576,"vm_usable_after":true,"rss_kib":7488},
+{"attack":"pcall_recursion_c_stack","ended":true,"stopped":false,"error":"finished normally","elapsed_ms":3.4,"max_turn_ms":3.4,"mem_before_kib":620,"mem_after_kib":572,"vm_usable_after":true,"rss_kib":7572},
+{"attack":"error_object_bomb","ended":true,"stopped":true,"error":"memory error: not enough memory","elapsed_ms":36.5,"max_turn_ms":36.5,"mem_before_kib":620,"mem_after_kib":572,"vm_usable_after":true,"rss_kib":7488},
+{"attack":"sleeping_loop_forever","ended":true,"stopped":true,"error":"runtime error: script exceeded its 50 ms budget","elapsed_ms":50.1,"max_turn_ms":50.1,"mem_before_kib":620,"mem_after_kib":572,"vm_usable_after":true,"rss_kib":7800},
+{"demo":"process model","ok":true,"elapsed_ms":161.1,"max_turn_ms":0.32,"log":["slept 50 ms", "http hello", "event right index", "slept inside pcall", "cleanup ran", "scope error caught true", "timeout true"],"outcomes":[("gesture", Finished), ("timeout", Finished), ("flow", Finished)]},
+{"reloads":1000,"variant":"source","std_lines":143,"ms_p50":0.76,"ms_p95":0.99,"ms_max":3.75,"rss_after_100_kib":7296,"rss_end_kib":7296,"rss_growth_kib":0,"vm_used_kib":668},
+{"reloads":1000,"variant":"bytecode","std_lines":143,"ms_p50":0.57,"ms_p95":0.63,"ms_max":0.88,"rss_after_100_kib":7244,"rss_end_kib":7244,"rss_growth_kib":0,"vm_used_kib":668},
+{"reloads":1000,"variant":"large-source","std_lines":3143,"ms_p50":8.79,"ms_p95":10.82,"ms_max":19.29,"rss_after_100_kib":9088,"rss_end_kib":9152,"rss_growth_kib":64,"vm_used_kib":1042},
+{"reloads":1000,"variant":"large-bytecode","std_lines":3143,"ms_p50":0.83,"ms_p95":0.98,"ms_max":1.39,"rss_after_100_kib":9416,"rss_end_kib":9416,"rss_growth_kib":0,"vm_used_kib":1042}
+]

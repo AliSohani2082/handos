@@ -1,0 +1,39 @@
+{
+  "all_outputs": false,
+  "cpu_pct": 13.8297923840242,
+  "frame_ms": {
+    "max": 5.086336,
+    "n": 1083,
+    "p50": 2.5620760000000002,
+    "p95": 3.09481,
+    "p99": 4.081729
+  },
+  "go": false,
+  "outputs": [
+    {
+      "frames_per_s": 60.09572433539833,
+      "logical": [
+        1920,
+        1080
+      ],
+      "name": "eDP-1",
+      "no_free_buffer": 0,
+      "scale": 1.0
+    },
+    {
+      "frames_per_s": 0.0,
+      "logical": [
+        1920,
+        1080
+      ],
+      "name": "HDMI-A-1",
+      "no_free_buffer": 0,
+      "scale": 1.0
+    }
+  ],
+  "render_scale": 0.5,
+  "rss_end_mib": 6.78125,
+  "rss_max_mib": 6.78125,
+  "seconds": 18.00460868,
+  "trace": null
+}

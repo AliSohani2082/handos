@@ -1,0 +1,20 @@
+[project]
+name = "two-hand-spike"
+version = "0.0.0"
+description = "handOs spike 1: can MediaPipe follow both hands through the palm-touch gesture?"
+requires-python = ">=3.10"
+dependencies = [
+    "mediapipe>=0.10.14",
+    "opencv-python>=4.9",
+    "numpy>=1.26",
+]
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

@@ -1,0 +1,16 @@
+{"app": "terminal", "method": "keymap", "lang": "en", "ok": false, "result": "typer refused or failed (exit 2) (key delay 2 ms)"}
+{"app": "terminal", "method": "keymap", "lang": "fa", "ok": true, "result": "exact (key delay 2 ms)"}
+{"app": "terminal", "method": "paste", "lang": "en", "ok": false, "result": "typer refused or failed (exit 2) (key delay 2 ms)"}
+{"app": "terminal", "method": "paste", "lang": "fa", "ok": false, "result": "typer refused or failed (exit 2) (key delay 2 ms)"}
+{"app": "qt", "method": "keymap", "lang": "en", "ok": false, "result": "app window never became active (key delay 2 ms)"}
+{"app": "qt", "method": "keymap", "lang": "fa", "ok": false, "result": "app window never became active (key delay 2 ms)"}
+{"app": "qt", "method": "paste", "lang": "en", "ok": false, "result": "app window never became active (key delay 2 ms)"}
+{"app": "qt", "method": "paste", "lang": "fa", "ok": false, "result": "typer refused or failed (exit 2) (key delay 2 ms)"}
+{"app": "gtk", "method": "keymap", "lang": "en", "ok": true, "result": "exact (key delay 2 ms)"}
+{"app": "gtk", "method": "keymap", "lang": "fa", "ok": true, "result": "exact (key delay 2 ms)"}
+{"app": "gtk", "method": "paste", "lang": "en", "ok": false, "result": "got:  (key delay 2 ms)"}
+{"app": "gtk", "method": "paste", "lang": "fa", "ok": false, "result": "typer refused or failed (exit 2) (key delay 2 ms)"}
+{"app": "browser", "method": "keymap", "lang": "en", "ok": false, "result": "got:  (key delay 2 ms)"}
+{"app": "browser", "method": "keymap", "lang": "fa", "ok": true, "result": "exact (key delay 2 ms)"}
+{"app": "browser", "method": "paste", "lang": "en", "ok": false, "result": "got:  (key delay 2 ms)"}
+{"app": "browser", "method": "paste", "lang": "fa", "ok": false, "result": "got:  (key delay 2 ms)"}
