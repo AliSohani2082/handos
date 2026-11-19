@@ -75,3 +75,8 @@ pub trait Input {
     /// Ends a finger scroll so the compositor can start kinetic scrolling.
     fn axis_stop(&mut self);
 }
+
+/// A backend that both draws and drives the pointer, which is what the daemon holds.
+pub trait Desktop: Overlay + Input {}
+
+impl<T: Overlay + Input> Desktop for T {}

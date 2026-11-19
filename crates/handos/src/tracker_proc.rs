@@ -149,6 +149,54 @@ pub fn peer_pid(fd: BorrowedFd<'_>) -> io::Result<u32> {
     Ok(cred.pid as u32)
 }
 
+/// Sends one packet without blocking. `Ok(false)` means the socket buffer was full and the
+/// packet was not sent (the caller retries on the next frame).
+pub fn send(fd: BorrowedFd<'_>, packet: &[u8]) -> io::Result<bool> {
+    // SAFETY: the socket is open and packet has packet.len() readable bytes.
+    let sent = unsafe {
+        libc::send(
+            fd.as_raw_fd(),
+            packet.as_ptr().cast(),
+            packet.len(),
+            libc::MSG_DONTWAIT | libc::MSG_NOSIGNAL,
+        )
+    };
+    if sent >= 0 {
+        return Ok(sent as usize == packet.len());
+    }
+    let err = io::Error::last_os_error();
+    if err.kind() == io::ErrorKind::WouldBlock {
+        Ok(false)
+    } else {
+        Err(err)
+    }
+}
+
+/// Whether `pid` is `ancestor` or one of its descendants. A tracker started through a wrapper
+/// such as `uv run` is a grandchild of the process the daemon spawned.
+pub fn descends_from(mut pid: u32, ancestor: u32) -> bool {
+    for _ in 0..16 {
+        if pid == ancestor {
+            return true;
+        }
+        match parent_pid(pid) {
+            Some(parent) if parent > 1 => pid = parent,
+            _ => return false,
+        }
+    }
+    false
+}
+
+fn parent_pid(pid: u32) -> Option<u32> {
+    let stat = fs::read_to_string(format!("/proc/{pid}/stat")).ok()?;
+    stat.rsplit_once(')')?
+        .1
+        .split_whitespace()
+        .nth(1)?
+        .parse()
+        .ok()
+}
+
 pub fn recv(fd: BorrowedFd<'_>, buf: &mut [u8]) -> io::Result<usize> {
     // SAFETY: the socket is open and buf has buf.len() writable bytes.
     let len = unsafe {
@@ -191,6 +239,14 @@ impl Tracker {
             .map(Self)
     }
 
+    /// A pidfd that becomes readable when the tracker exits, so the event loop can watch it
+    /// without blocking in `wait()`.
+    pub fn exit_fd(&self) -> io::Result<OwnedFd> {
+        // SAFETY: pidfd_open takes a pid and flags and returns a new fd or -1.
+        let fd = unsafe { libc::syscall(libc::SYS_pidfd_open, self.0.id() as libc::pid_t, 0) };
+        owned(i32::try_from(fd).map_err(io::Error::other)?)
+    }
+
     pub fn id(&self) -> u32 {
         self.0.id()
     }
@@ -204,5 +260,19 @@ impl Drop for Tracker {
     fn drop(&mut self) {
         let _ = self.0.kill();
         let _ = self.0.wait();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_process_descends_from_itself_and_its_ancestors_only() {
+        let me = std::process::id();
+        let parent = parent_pid(me).expect("parent");
+        assert!(descends_from(me, me));
+        assert!(descends_from(me, parent));
+        assert!(!descends_from(parent, me));
     }
 }

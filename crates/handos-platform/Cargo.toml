@@ -13,5 +13,5 @@ workspace = true
 fake = []
 
 [dependencies]
-handos-render = { path = "../handos-render" }
+handos-render = { path = "../handos-render", default-features = false }
 thiserror.workspace = true

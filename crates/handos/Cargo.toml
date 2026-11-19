@@ -10,6 +10,11 @@ workspace = true
 
 [dependencies]
 handos-proto = { path = "../handos-proto" }
+handos-hands = { path = "../handos-hands" }
+handos-gesture = { path = "../handos-gesture" }
+handos-platform = { path = "../handos-platform" }
+handos-platform-wayland = { path = "../handos-platform-wayland" }
+handos-render = { path = "../handos-render" }
 anyhow.workspace = true
 calloop = { workspace = true, features = ["signals"] }
 clap.workspace = true
@@ -18,5 +23,6 @@ tracing.workspace = true
 tracing-subscriber.workspace = true
 
 [dev-dependencies]
+handos-platform = { path = "../handos-platform", features = ["fake"] }
 serde_json.workspace = true
 tempfile = "3"

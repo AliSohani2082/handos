@@ -1,9 +1,11 @@
+#![cfg_attr(test, allow(clippy::unwrap_used, clippy::expect_used))]
+
 mod cli;
 mod daemon;
 mod trace_cmd;
 mod tracker_proc;
 
-use std::path::Path;
+use std::path::PathBuf;
 
 use anyhow::Result;
 use clap::Parser;
@@ -22,18 +24,53 @@ fn main() -> Result<()> {
         .with_writer(std::io::stderr)
         .try_init()
         .map_err(anyhow::Error::msg)?;
+    let draws = match &cli.command {
+        Command::Daemon { headless, .. }
+        | Command::Trace {
+            command: TraceCommand::Replay { headless, .. },
+        } => !headless,
+        Command::Trace {
+            command: TraceCommand::Record { .. },
+        } => true,
+    };
+    if draws {
+        // Settings (D1) will pass `overlay.vulkan_driver` here.
+        #[allow(unsafe_code)]
+        // SAFETY: nothing has spawned a thread yet (the tracing subscriber starts none).
+        let _driver = unsafe { handos_platform_wayland::vulkan::select_driver(None) };
+    }
     match cli.command {
-        Command::Daemon { record, tracker } => daemon::run(&tracker, record.as_deref()),
+        Command::Daemon {
+            record,
+            tracker,
+            headless,
+        } => daemon::run(&daemon::Options {
+            tracker,
+            record,
+            headless,
+        }),
         Command::Trace {
             command: TraceCommand::Record { file },
-        } => daemon::run(Path::new("handos-tracker-mp"), Some(&file)),
+        } => daemon::run(&daemon::Options {
+            tracker: PathBuf::from("handos-tracker-mp"),
+            record: Some(file),
+            headless: false,
+        }),
         Command::Trace {
             command:
                 TraceCommand::Replay {
                     file,
                     speed,
-                    headless: _,
+                    headless,
+                    awake,
                 },
-        } => trace_cmd::replay(&file, speed),
+        } => trace_cmd::replay(
+            &file,
+            &trace_cmd::ReplayOptions {
+                speed,
+                headless,
+                awake,
+            },
+        ),
     }
 }

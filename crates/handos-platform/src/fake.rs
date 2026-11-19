@@ -97,6 +97,54 @@ impl Input for FakeInput {
     }
 }
 
+/// A fake overlay and a fake input behind one value, for code that takes a [`crate::Desktop`].
+#[derive(Debug, Default)]
+pub struct FakeDesktop {
+    pub overlay: FakeOverlay,
+    pub input: FakeInput,
+}
+
+impl FakeDesktop {
+    pub fn new(outputs: Vec<OutputInfo>) -> Self {
+        Self {
+            overlay: FakeOverlay::new(outputs),
+            input: FakeInput::default(),
+        }
+    }
+}
+
+impl Overlay for FakeDesktop {
+    fn outputs(&self) -> Vec<OutputInfo> {
+        self.overlay.outputs()
+    }
+
+    fn draw(&mut self, output: OutputId, list: &DisplayList) -> Result<(), PlatformError> {
+        self.overlay.draw(output, list)
+    }
+
+    fn clear(&mut self, output: OutputId) {
+        self.overlay.clear(output);
+    }
+}
+
+impl Input for FakeDesktop {
+    fn pointer_abs(&mut self, output: OutputId, x: f64, y: f64) {
+        self.input.pointer_abs(output, x, y);
+    }
+
+    fn button(&mut self, btn: Button, pressed: bool) {
+        self.input.button(btn, pressed);
+    }
+
+    fn axis(&mut self, dy: f64) {
+        self.input.axis(dy);
+    }
+
+    fn axis_stop(&mut self) {
+        self.input.axis_stop();
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
