@@ -316,6 +316,10 @@ dependencies = [
 [[package]]
 name = "handos-platform"
 version = "0.1.0"
+dependencies = [
+ "handos-render",
+ "thiserror",
+]
 
 [[package]]
 name = "handos-platform-wayland"

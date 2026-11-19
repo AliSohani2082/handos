@@ -7,3 +7,11 @@ publish.workspace = true
 
 [lints]
 workspace = true
+
+[features]
+# Recording fakes of `Overlay` and `Input` for daemon tests.
+fake = []
+
+[dependencies]
+handos-render = { path = "../handos-render" }
+thiserror.workspace = true
