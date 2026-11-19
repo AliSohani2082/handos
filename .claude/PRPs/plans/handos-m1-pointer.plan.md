@@ -93,7 +93,7 @@ M0 left four throwaway spikes (`spikes/`) that proved each risky part separately
 | serde-saphyr 2.1 | Context7 `/bourumir-wyngs/serde-saphyr` | `from_str_with_options(text, options!{ strict_booleans: true, reject_unsupported_tags: true, duplicate_keys: DuplicateKeyPolicy::Error, budget: budget!{ max_anchors: 0 } })`; errors implement Display with a source snippet. Combine with `#[serde(deny_unknown_fields)]` on every settings struct |
 | calloop 0.14 | Context7 `/smithay/calloop` | `EventLoop::try_new()`, `handle.insert_source(Generic::new(fd, Interest::READ, Mode::Level), cb)`, `Timer::from_duration`, `event_loop.run(timeout, &mut state, idle_cb)`. One thread, no async runtime |
 | SCTK 0.21 `calloop` feature | `cargo info smithay-client-toolkit@0.21` | Default features include `calloop` + `calloop-wayland-source`; use `WaylandSource::new(conn, queue).insert(handle)` instead of the spike's hand-written `poll` loop |
-| MediaPipe Hand Landmarker | https://developers.google.com/edge/mediapipe/solutions/vision/hand_landmarker | VIDEO running mode needs strictly increasing timestamps; handedness assumes a mirrored (selfie) input image |
+| MediaPipe Hand Landmarker | https://developers.google.com/edge/mediapipe/solutions/vision/hand_landmarker | VIDEO running mode needs strictly increasing timestamps; the live A8 check confirmed anatomical labels on raw camera images |
 | wlr virtual pointer v2 | https://wayland.app/protocols/wlr-virtual-pointer-unstable-v1 | `create_virtual_pointer_with_output` maps absolute motion to one output; every event batch ends with `frame()`; `axis_source(finger)` + `axis` for scroll |
 | 1€ filter | https://gery.casiez.net/1euro/ | Tune with beta = 0, lower min_cutoff until still is still, then raise beta until fast moves stop lagging |
 
@@ -207,7 +207,7 @@ let out = Command::new(env!("CARGO_BIN_EXE_luau-spike")).args(args).output().exp
 | `crates/handos/{Cargo.toml,src/main.rs,src/cli.rs,src/daemon.rs,src/tracker_proc.rs,src/control.rs,src/settings.rs,src/doctor.rs,src/bench.rs,src/trace_cmd.rs,src/pressed.rs,src/calibrate.rs}` | CREATE | Daemon, CLI client, settings, supervision, doctor, bench, calibration |
 | `crates/handos/tests/{cli.rs,replay.rs}` | CREATE | Binary-level tests: exit codes, settings errors, headless trace replay |
 | `trackers/mediapipe-py/{pyproject.toml,src/handos_tracker_mp/__init__.py,__main__.py,camera.py,model.py,protocol.py,tracks.py,tracker.py}` | CREATE | Python tracker: capture newest frame, MediaPipe, track ids, HandFrame packets, control messages |
-| `trackers/mediapipe-py/tests/{test_protocol.py,test_tracks.py,test_handedness.py}` | CREATE | Codec vs Rust golden bytes, association, handedness swap |
+| `trackers/mediapipe-py/tests/{test_protocol.py,test_tracks.py,test_handedness.py}` | CREATE | Codec vs Rust golden bytes, association, anatomical handedness |
 | `tools/convert_spike_trace.py` | CREATE | Spike JSONL (mirrored) → `.htrace` (unmirrored) for test fixtures |
 | `traces/palm-good.htrace`, `traces/pluck-good.htrace`, `traces/*.reps.json` | CREATE | Converted spike sessions + rep windows, used by replay tests |
 | `packaging/systemd/handos.service` | CREATE | systemd user unit |
@@ -272,13 +272,13 @@ Phases are PR boundaries. Every task ends with `cargo fmt --all --check && cargo
   - `protocol.py`: `encode_frame(...) -> bytes` with `struct` (`"<BBBxIQQ"` header, `"<IB3xff"` per hand + 126 floats), `encode_control(dict)`, `decode_control(bytes)`.
   - `tracker.py`: connect `socket.socket(AF_UNIX, SOCK_SEQPACKET)` to `--socket` (default `$XDG_RUNTIME_DIR/handos/tracker.sock`); send `hello`; loop: wait for a new frame, **no mirroring**, `detect_for_video(image, ts_ms)` with strictly increasing ts, build hands, map handedness (GOTCHA), send the newest frame, never queue; `status` once per second; non-blocking `recv` for `set`/`shutdown`; `idle` = same pipeline paced to the idle rate; `off` = close the camera, keep the socket; `fps` paces active mode. `--probe`: open the camera for 2 s, print one JSON line `{fps, brightness}` and exit (used by `doctor`).
 - **MIRROR**: CAMERA_SETUP, TRACK_ASSOCIATION, PYTEST_STYLE; ruff line length 120.
-- **GOTCHA**: **Handedness.** MediaPipe assumes a mirrored selfie image (spike `record.py:127` flipped for this reason). The protocol forbids mirroring and requires anatomical labels, so with an un-mirrored image the raw labels are expected to be **swapped**: map MediaPipe `"Left"` → right (1) and `"Right"` → left (0). The design doc's tracker rule says the opposite ("labels flip if the input is mirrored"); trust the on-camera check in Task A8, then fix whichever is wrong (code or doc). **VIDEO mode** raises on non-increasing timestamps: use `max(prev + 1, now_ms)`.
+- **GOTCHA**: **Handedness.** Keep MediaPipe 1.2.3 labels on raw camera images: `"Left"` → left (0), `"Right"` → right (1). The live check showed that swapping them reverses both hands. Swap labels only when converting recordings from mirrored inputs. **VIDEO mode** raises on non-increasing timestamps: use `max(prev + 1, now_ms)`.
 - **VALIDATE**: `cd trackers/mediapipe-py && uv run pytest -q && uvx ruff check --line-length 120 .`; `test_protocol.py` asserts `encode_frame(...)` of the golden frame equals `crates/handos-proto/tests/golden/two_hands.bin`.
 
 #### Task A6: Spike traces → test fixtures
 - **ACTION**: `tools/convert_spike_trace.py` converts `spikes/two-hand/data/{palm,pluck}-good-*.jsonl` into `traces/{palm,pluck}-good.htrace` plus `traces/{palm,pluck}-good.reps.json` (rep and hold windows in µs).
-- **IMPLEMENT**: Un-mirror: `lm x' = 1 − x`, `world x' = −x`; labels kept (they came from mirrored input, so they are already anatomical: spike 1 found palm-normal z = +1 for `Left` in every frame). Track ids by the same association as A5 (import it from the tracker package). `t_capture_us = t_ms × 1000`, presence 1.0, flags bit 0 set.
-- **GOTCHA**: The facing sign flips with the un-mirroring: on converted data, palms toward the camera give normal z = **−1 for left, +1 for right**. Task B5 asserts this.
+- **IMPLEMENT**: Un-mirror: `lm x' = 1 − x`, `world x' = −x`; swap the original MediaPipe labels because the spike used mirrored input. Track ids by the same association as A5 (import it from the tracker package). `t_capture_us = t_ms × 1000`, presence 1.0, flags bit 0 set.
+- **GOTCHA**: The facing sign flips with the un-mirroring: on converted data, palms toward the camera give normal z = **+1 for left, −1 for right**. Task B5 asserts this.
 - **VALIDATE**: `uv run --project trackers/mediapipe-py tools/convert_spike_trace.py …`; a Rust test reads both traces and finds ≥ 2,000 frames each, with two hands in ≥ 95% of hold-window frames.
 
 #### Task A7: Daemon skeleton + trace record/replay
@@ -294,6 +294,8 @@ Phases are PR boundaries. Every task ends with `cargo fmt --all --check && cargo
 - **VALIDATE**: Both labels correct; if not, flip the mapping in `tracker.py` and fix `test_handedness.py`; correct the Tracking spec's rule in the design doc either way.
 
 ### Phase B — Hands and gestures, pure and trace-tested (PR 2)
+
+See the [Phase B report](../reports/handos-m1-pointer-phase-b-report.md) for the replay results. The M0 pluck exercise used image distances and a deliberately open receiving palm. A new recording of thumb-to-index clicks is needed to validate M1's 3D pinch threshold.
 
 #### Task B1: One Euro + outlier rejection
 - **ACTION**: `handos-hands::one_euro`, `::outlier`.
@@ -319,7 +321,7 @@ Phases are PR boundaries. Every task ends with `cargo fmt --all --check && cargo
 
 #### Task B5: Derived features (M1 subset)
 - **ACTION**: `handos-hands::features`.
-- **IMPLEMENT**: `palm_center` (mean of 0, 5, 9, 13, 17), `hu_world` (|w5 − w17|), `hu_screen` (max of |s5 − s17| and 0.8 × |s0 − s9|), `facing` (normal `(w5 − w0) × (w17 − w0)` normalised, `facing = (1 + nz × sign) / 2` with sign +1 for left, −1 for right on **un-mirrored** world data; 0 palm to camera, 1 back), `pinch(f).strength = clamp((0.60 − d/hu)/0.40, 0, 1)` with d = world distance thumb tip to the tip of f, `pinch(f).point` midpoint, `extension(f)` (angle at the PIP joint: ≥ 160° → 1, ≤ 90° → 0), `pose` ∈ {open (all five extensions ≥ 0.7), fist (all four fingers ≤ 0.3), other} with score = smallest margin.
+- **IMPLEMENT**: `palm_center` (mean of 0, 5, 9, 13, 17), `hu_world` (|w5 − w17|), `hu_screen` (max of |s5 − s17| and 0.8 × |s0 − s9|), `facing` (normal `(w5 − w0) × (w17 − w0)` normalised, `facing = (1 + nz × sign) / 2` with sign −1 for left, +1 for right on **un-mirrored** world data; 0 palm to camera, 1 back), `pinch(f).strength = clamp((0.60 − d/hu)/0.40, 0, 1)` with d = world distance thumb tip to the tip of f, `pinch(f).point` midpoint, `extension(f)` (angle at the PIP joint: ≥ 160° → 1, ≤ 90° → 0), `pose` ∈ {open (all five extensions ≥ 0.7), fist (all four fingers ≤ 0.3), other} with score = smallest margin.
 - **GOTCHA**: See A6: the sign is defined for un-mirrored world coordinates. Mirror only for display and mapping.
 - **VALIDATE**: trace test: during every hold window of `palm-good.htrace` (palms to camera), median `facing` < 0.2 for both hands. Unit tests for pinch strength endpoints (0.20 hu → 1, 0.60 hu → 0).
 
@@ -563,7 +565,7 @@ EXPECT: exit 0, click count and jitter printed
 
 ## Notes
 - **Design doc corrections found while planning** (lay them as suggestions when the related task lands):
-  1. Tracking spec, tracker rule: "MediaPipe's labels … flip if the input is mirrored" — MediaPipe assumes a mirrored input; settle after A8.
+  1. Tracking spec, tracker rule: the A8 live check supports keeping raw labels and swapping labels on mirrored recordings.
   2. Platform backends, Buffers row: still says `wl_shm` ARGB8888; after ADR 5 it is a wgpu Vulkan swapchain.
   3. CLI spec, `handos.yaml` sample: the filter values are placeholders; replace them with the spike-measured defaults (D1); add `pointer` and `overlay.vulkan_driver`.
   4. Tracking spec, `set` control message table: add the `fps` field (already described in the "Adaptive rate" paragraph).

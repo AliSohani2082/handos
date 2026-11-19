@@ -1,0 +1,22 @@
+[package]
+name = "handos"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+handos-proto = { path = "../handos-proto" }
+anyhow.workspace = true
+calloop = { workspace = true, features = ["signals"] }
+clap.workspace = true
+libc.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
+tempfile = "3"
