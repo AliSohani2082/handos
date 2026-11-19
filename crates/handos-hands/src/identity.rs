@@ -47,6 +47,7 @@ impl Identity {
                 .iter()
                 .any(|b| a.track_id != b.track_id && overlaps(&a.landmarks, &b.landmarks))
         });
+        let visible_ids: HashSet<u32> = visible.iter().map(|hand| hand.track_id).collect();
         let mut seen = HashSet::with_capacity(visible.len());
         for hand in visible {
             if !seen.insert(hand.track_id) {
@@ -68,12 +69,15 @@ impl Identity {
             track.candidate = Some((hand.handedness, n));
             if n == CONFIRM_FRAMES {
                 let preferred = index(hand.handedness);
-                let free = if self.owners[preferred].is_none() {
-                    preferred
-                } else {
-                    1 - preferred
+                // Take the other role only when the preferred owner is actually in view. An
+                // owner kept alive by the grace period is most likely this same hand under an
+                // old track id, so wait for its role to expire instead.
+                let free = match self.owners[preferred] {
+                    None => Some(preferred),
+                    Some(owner) if visible_ids.contains(&owner) => Some(1 - preferred),
+                    Some(_) => None,
                 };
-                if self.owners[free].is_none() {
+                if let Some(free) = free.filter(|&free| self.owners[free].is_none()) {
                     self.owners[free] = Some(hand.track_id);
                 }
             }
@@ -139,5 +143,19 @@ mod tests {
         assert_eq!(identity.update(&swapped, 6), [Some(2), Some(1)]);
         assert_eq!(identity.update(&[], 500_005), [Some(2), Some(1)]);
         assert_eq!(identity.update(&[], 500_006), [None; 2]);
+    }
+
+    #[test]
+    fn a_replacement_track_waits_for_its_own_role_during_grace() {
+        let mut identity = Identity::default();
+        for now in 0..3 {
+            identity.update(&[hand(1, 0.0)], now);
+        }
+        assert_eq!(identity.update(&[hand(1, 0.0)], 3), [None, Some(1)]);
+        // The tracker re-ids the same right hand; the old id still holds Right for 500 ms.
+        for now in 4..10 {
+            assert_eq!(identity.update(&[hand(2, 0.5)], now), [None, Some(1)]);
+        }
+        assert_eq!(identity.update(&[hand(2, 0.5)], 500_003), [None, Some(2)]);
     }
 }

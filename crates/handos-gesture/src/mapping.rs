@@ -41,12 +41,15 @@ impl Mapping {
         self.output
     }
 
+    /// `s + k × (map(point) − map(palm))`, where `map` is the clamped box map. Using the clamped
+    /// map for both terms keeps `k = 1` equal to a plain box map even when the palm leaves the box.
     pub fn point(self, palm: [f32; 2], point: [f32; 2]) -> [f32; 2] {
         std::array::from_fn(|i| {
             let scale = self.size[i] / (self.max[i] - self.min[i]);
-            let centre = ((palm[i] - self.min[i]) * scale).clamp(0.0, self.size[i]);
+            let map = |v: f32| ((v - self.min[i]) * scale).clamp(0.0, self.size[i]);
+            let centre = map(palm[i]);
             self.origin[i]
-                + (centre + self.hand_scale * (point[i] - palm[i]) * scale).clamp(0.0, self.size[i])
+                + (centre + self.hand_scale * (map(point[i]) - centre)).clamp(0.0, self.size[i])
         })
     }
 }
@@ -63,5 +66,12 @@ mod tests {
         assert_eq!(map.point([1.0; 2], [1.0; 2]), [210.0, 120.0]);
         assert_eq!(map.point([0.5; 2], [0.25, 0.75]), [60.0, 95.0]);
         assert_eq!(map.point([0.5; 2], [-1.0, 2.0]), [10.0, 120.0]);
+    }
+
+    #[test]
+    fn full_scale_matches_plain_mapping_when_the_palm_leaves_the_box() {
+        let map = Mapping::new([0.25; 2], [0.75; 2], 1.0, 0, [0.0; 2], [200.0; 2])
+            .unwrap_or_else(|| unreachable!());
+        assert_eq!(map.point([0.875, 0.5], [0.75, 0.5]), [200.0, 100.0]);
     }
 }

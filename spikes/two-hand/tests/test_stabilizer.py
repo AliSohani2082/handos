@@ -42,6 +42,34 @@ def test_track_survives_brief_dropout():
     assert s.update([obs("Left", 0.52)], 5 / 30)[0].label == "Right"
 
 
+def test_a_far_jump_never_creates_a_duplicate_label():
+    s = HandStabilizer()
+    s.update([obs("Left", 0.2), obs("Right", 0.8)], 0)
+    out = s.update([obs("Left", 0.2), obs("Right", 0.5)], 1 / 30)  # Right jumps 0.3 > max_jump
+    assert sorted(h.label for h in out) == ["Left", "Right"]
+
+
+def test_a_dropout_resets_the_disagreement_run():
+    s = HandStabilizer()
+    s.update([obs("Right", 0.5)], 0)
+    k = 1
+    for _ in range(3):  # three runs of 20 disagreeing frames, each broken by a dropout
+        for _ in range(20):
+            assert s.update([obs("Left", 0.5)], k / 30)[0].label == "Right"
+            k += 1
+        s.update([], k / 30)
+        k += 1
+
+
+def test_two_swapped_labels_correct_together():
+    s = HandStabilizer()
+    s.update([obs("Left", 0.2), obs("Right", 0.8)], 0)
+    for k in range(1, 40):
+        out = s.update([obs("Right", 0.2), obs("Left", 0.8)], k / 30)
+        assert sorted(h.label for h in out) == ["Left", "Right"]
+    assert {round(float(h.lm[0, 0]), 1): h.label for h in out} == {0.2: "Right", 0.8: "Left"}
+
+
 def test_one_euro_reduces_jitter_on_still_input():
     rng = np.random.default_rng(0)
     f = OneEuro(1.5, 8.0)

@@ -287,6 +287,11 @@ class BenchProbe:
     def frame(self, view: np.ndarray, hands: int, cam: tuple[int, int]) -> bool:
         h0 = time.thread_time()
         now = time.monotonic()
+        if self.last_frame is None:
+            # Camera and model setup happen between construction and the first frame; start the
+            # phase and window clocks here so setup does not eat into the warm-up.
+            self.phase_t0 = now
+            self._open_window()
         self.cam = cam
         fm = (now - self.last_frame) * 1000 if self.last_frame else 0.0
         self.last_frame = now

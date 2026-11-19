@@ -283,7 +283,7 @@ Phases are PR boundaries. Every task ends with `cargo fmt --all --check && cargo
 
 #### Task A7: Daemon skeleton + trace record/replay
 - **ACTION**: `handos daemon` binds `tracker.sock`, spawns the tracker, logs frames; `handos trace record|replay`.
-- **IMPLEMENT**: clap subcommands (`daemon`, `status`, `toggle`, `sleep`, `wake`, `pause`, `resume`, `doctor`, `bench`, `trace record <file>`, `trace replay <file> [--speed X] [--headless]`). Daemon main thread = calloop `EventLoop<Daemon>`; `tracker.sock` is a `SOCK_SEQPACKET` listener (`libc::socket(AF_UNIX, SOCK_SEQPACKET | SOCK_CLOEXEC, 0)`, socket dir `$XDG_RUNTIME_DIR/handos/` mode 0700) inserted as a `Generic` source; frames decoded and handed to `Daemon::on_frame`. `tracker_proc.rs` spawns `settings.tracker.command` with `--socket <path>`, restarts with backoff 1 s, 2 s, 5 s on exit or 1 s without a frame while awake (Architecture failure table). `trace record` = the daemon tees received packets to a `TraceWriter` (control method `trace.record`, Task D3; until D3 lands, a `--record <file>` daemon flag). `trace replay` = feed a trace into `on_frame` on the trace's own clock instead of spawning a tracker; `--headless` skips Wayland (used by tests and bench); `--speed 0` = as fast as possible.
+- **IMPLEMENT**: clap subcommands (`daemon`, `status`, `toggle`, `sleep`, `wake`, `pause`, `resume`, `doctor`, `bench`, `trace record <file>`, `trace replay <file> [--speed X] [--headless]`). Daemon main thread = calloop `EventLoop<Daemon>`; `tracker.sock` is a `SOCK_SEQPACKET` listener (`libc::socket(AF_UNIX, SOCK_SEQPACKET | SOCK_CLOEXEC, 0)`, socket dir `$XDG_RUNTIME_DIR/handos/` mode 0700) inserted as a `Generic` source; frames decoded and handed to `Daemon::on_frame`. `tracker_proc.rs` spawns `settings.tracker.command` with `--socket <path>`, restarts with backoff 1 s, 2 s, 5 s on exit or 1 s without a frame while the tracker was last told `active` or `idle` (never while it is `off`: paused, or asleep with `clutch.wake: hotkey`, since no frames are expected then) (Architecture failure table). `trace record` = the daemon tees received packets to a `TraceWriter` (control method `trace.record`, Task D3; until D3 lands, a `--record <file>` daemon flag). `trace replay` = feed a trace into `on_frame` on the trace's own clock instead of spawning a tracker; `--headless` skips Wayland (used by tests and bench); `--speed 0` = as fast as possible.
 - **MIRROR**: LOGGING, ERROR_HANDLING. SCTK `WaylandSource` joins in Phase C.
 - **GOTCHA**: Remove a stale socket file before `bind`, but only after `connect` to it fails (another daemon may be running → exit 1 with "daemon already running").
 - **VALIDATE**: `crates/handos/tests/replay.rs`: `handos trace replay traces/pluck-good.htrace --headless --speed 0` exits 0 and logs the frame count; manual: `handos daemon` with the real tracker logs ~30 fps.
@@ -337,13 +337,18 @@ See the [Phase B report](../reports/handos-m1-pointer-phase-b-report.md) for the
 
 #### Task B8: Mapping
 - **ACTION**: `handos-gesture::mapping`.
-- **IMPLEMENT**: The box comes in as a value (from `handos.yaml`, `calibration.yaml` or the default — resolved by the daemon, Task D7); the mapping itself does no I/O. Mirror x (x' = 1 − x). Step 1: `s = origin + (m − box.min) / (box.max − box.min) × size`, clamped, m = palm centre. Step 2: any point p → `s + k × (map(p) − map(m))`, k = `mapping.hand_scale` (0.6). Pointer = landmark 5 through this transform. Output = the target output's logical rect (`mapping.target`: `active-output` = Hyprland's focused monitor at wake time, `all-outputs` = the layout's bounding box, or an output name).
+- **IMPLEMENT**: The box comes in as a value (from `handos.yaml`, `calibration.yaml` or the default — resolved by the daemon, Task D7); the mapping itself does no I/O. Inputs are `HandState.image` points, which the conditioner already mirrored once (B4), so the mapping does not mirror again. Step 1: `s = origin + (m − box.min) / (box.max − box.min) × size`, clamped, m = palm centre. Step 2: any point p → `s + k × (map(p) − map(m))`, k = `mapping.hand_scale` (0.6). Pointer = landmark 5 through this transform. Output = the target output's logical rect (`mapping.target`: `active-output` = Hyprland's focused monitor at wake time, `all-outputs` = the layout's bounding box, or an output name).
 - **VALIDATE**: unit tests: box corners → output corners; clamping; k = 1 reduces to a plain box map.
 
 #### Task B9: Pointer actions (the M1 gesture set)
 - **ACTION**: `handos-gesture::pointer` — turns events into `PointerCmd { Move{x,y,output}, Button{btn, pressed}, Axis{dy}, AxisStop }`.
 - **IMPLEMENT**: Pointer hand = `pointer.hand` (default right). Move: every frame while awake, unless a scroll is active. Left: on `Pinch{right,index}` `Began` remember time and point; if it `Ended` within 0.3 s and moved < 0.3 hu → `Button(left, down)` + `Button(left, up)` (click on release). Once held > 0.3 s or moved ≥ 0.3 hu → `Button(left, down)` at the begin position (drag starts), then moves, `Button(left, up)` on `Ended` **or `Cancelled`**. Right click = `Pinch{right,middle}.tap`. Scroll = `Pinch{right,middle}` held > 0.3 s: `Axis(dy = Δpinch.y × pointer.scroll_gain)` (default 1.0 screen px per px, natural direction: content follows the hand), pointer frozen, `AxisStop` on end. Index and middle pinches on one hand both claim `pointer` (first wins). A `PressedSet` records every button down; every cancel, sleep and shutdown path releases it first.
-- **VALIDATE**: unit tests for click vs drag thresholds, cancel-releases-button, scroll freeze; `proptest`: after any event sequence ending in `Cancelled` or sleep, `PressedSet` is empty. Replay test on `pluck-good.htrace` awake: count left-pinch `Began` events inside rep windows; expect ≥ 45 of 50 (spike 1 pass bar), log the number.
+- **VALIDATE**: unit tests for click vs drag thresholds, cancel-releases-button, scroll freeze; `proptest`: after any event sequence ending in `Cancelled` or sleep, `PressedSet` is empty. Replay test on `click-good.htrace` (Task B10) awake: count left-pinch `Began` events inside rep windows; expect ≥ 45 of 50 (spike 1 pass bar), log the number. `pluck-good.htrace` cannot serve here: its closest 3D thumb-to-index gap is 0.437 hu, above the 0.30 hu entry threshold (Phase B report).
+
+#### Task B10: Pinch-click fixture (recorded before C7)
+- **ACTION**: Record real thumb-to-index clicks with annotated repetitions.
+- **IMPLEMENT**: Add `--task click` to `spikes/two-hand/record.py` and `guide.py`: 50 reps, 1 s "ready" with the right hand open, then "go" = pinch thumb to index and release. Record `click-good` in good light, convert it with A6's tool to `traces/click-good.htrace` + `traces/click-good.reps.json`, commit both.
+- **VALIDATE**: The B9 replay test reaches ≥ 45 of 50. If it does not, log the per-rep minimum 3D gap and revisit the default threshold with that distribution (calibration, D7, adjusts it per user).
 
 ### Phase C — Overlay, rendering and input on Wayland (PR 3)
 
@@ -385,9 +390,9 @@ See the [Phase B report](../reports/handos-m1-pointer-phase-b-report.md) for the
 
 #### Task C7: Daemon wiring
 - **ACTION**: `handos::daemon` puts it together on one thread.
-- **IMPLEMENT**: calloop loop with sources: `WaylandSource`, tracker listener + connection, control listener (D3), a housekeeping `Timer` every 250 ms (tracker watchdog, idle and adaptive rate, the 30 s sleep timer). `on_frame`: `Conditioner::update` → gesture engine → `PointerCmd`s to `Input` → if awake and a hand is visible, build the display list (skeletons mapped with B8, predicted to now + 8 ms, plus the mode dot) → `Overlay::draw`; if no hand is visible or asleep → `clear` once. Adaptive rate: send `Set{mode: active, fps: 30}` while a trigger is active or palm speed > 0.5 hu/s, else `fps: 15`; `idle` (5 fps) after 3 s without hands; `off` when asleep with `clutch.wake: hotkey`, or paused.
+- **IMPLEMENT**: calloop loop with sources: `WaylandSource`, tracker listener + connection, control listener (D3), a housekeeping `Timer` every 250 ms (tracker watchdog, idle and adaptive rate, the 30 s sleep timer). `on_frame`: `Conditioner::update` → gesture engine → `PointerCmd`s to `Input` → if awake and a hand is visible, build the display list (skeletons mapped with B8, predicted to now + 8 ms, plus the mode dot) → `Overlay::draw`; if no hand is visible or asleep → `clear` once. Adaptive rate: send `Set{mode: active, fps: 30}` while a trigger is active or palm speed > 0.5 hu/s, else `fps: 15`; `idle` (5 fps) after 3 s without hands; `off` when asleep with `clutch.wake: hotkey`, or paused. Paused is its own state: the clutch mode stays as it was, the pointer is cancelled, `off` is sent, and the watchdog's no-frame rule is suspended until `resume` (A7) so it cannot respawn the tracker and reopen the camera.
 - **GOTCHA**: The main thread never blocks: tracker exit is watched with a `Generic` source on a pidfd (`libc::syscall(SYS_pidfd_open, pid, 0)`), not `wait()`.
-- **VALIDATE**: `crates/handos/tests/replay.rs` drives `Daemon` with `FakeOverlay`/`FakeInput` from `traces/pluck-good.htrace` awake and asserts ≥ 45 left clicks or drags begin inside rep windows and the pressed set is empty at the end. Manual: live tracker, S1 end to end.
+- **VALIDATE**: `crates/handos/tests/replay.rs` drives `Daemon` with `FakeOverlay`/`FakeInput` from `traces/click-good.htrace` (Task B10) awake and asserts ≥ 45 left clicks or drags begin inside rep windows and the pressed set is empty at the end. Manual: live tracker, S1 end to end.
 
 ### Phase D — Settings, control, operations, exit tests (PR 4)
 
@@ -443,7 +448,7 @@ See the [Phase B report](../reports/handos-m1-pointer-phase-b-report.md) for the
 #### Task D9: Delete the spikes
 - **ACTION**: Remove `spikes/` and its `exclude` entry; update `.gitignore`.
 - **IMPLEMENT**: Before deleting, confirm every pattern listed in this plan has been ported and `traces/` holds the converted fixtures. `spikes/RESULTS.md` moves to `docs/m0-spike-results.md` (the design doc and PRD index cite it — update those references); raw spike JSONL stays in git history.
-- **VALIDATE**: `cargo test --workspace` and the Python tests still pass; `grep -rn "spikes/" --include='*.rs' --include='*.py' --include='*.md' .` finds only historical references in `docs/`.
+- **VALIDATE**: `cargo test --workspace` and the Python tests still pass; `git grep -n "spikes/" -- ':!docs/' ':!.claude/PRPs/'` prints nothing (`docs/` and the PRP plans and reports are historical records and may keep the path).
 
 ---
 
@@ -470,7 +475,7 @@ See the [Phase B report](../reports/handos-m1-pointer-phase-b-report.md) for the
 | vulkan select | fake icd.d with intel+nvidia; env preset | intel chosen; env untouched | yes |
 | calibration | four edge samples; 0.1-wide box; open − closed = 0.1 hu; yaml + calibration + default box | box; rejected; rejected; yaml wins, then calibration | yes |
 | pinch strength with calibration | open 0.60 / closed 0.20 | identical to B5 | no |
-| replay: pluck awake | `pluck-good.htrace` | ≥ 45/50 pinch begins inside reps; pressed set empty | no |
+| replay: clicks awake | `click-good.htrace` (B10) | ≥ 45/50 pinch begins inside reps; pressed set empty | no |
 | replay: asleep | `pluck-good.htrace` from Sleep | 0 wakes outside open-palm holds | no |
 
 ### Edge Cases Checklist
@@ -506,13 +511,14 @@ EXPECT: all pass
 ### Build
 ```bash
 cargo build --release -p handos
+cargo install --locked --path crates/handos
 uv tool install --force ./trackers/mediapipe-py
 ```
 EXPECT: `handos` and `handos-tracker-mp` on PATH
 
 ### Headless end to end
 ```bash
-handos trace replay traces/pluck-good.htrace --headless --speed 0
+handos trace replay traces/click-good.htrace --headless --speed 0
 handos bench --jitter traces/palm-good.htrace --windows traces/palm-good.reps.json
 ```
 EXPECT: exit 0, click count and jitter printed
@@ -525,7 +531,7 @@ EXPECT: exit 0, click count and jitter printed
 - [ ] Quick pinch clicks; held pinch drags a window; middle pinch scrolls a browser page; quick middle pinch opens a context menu
 - [ ] Windows under the overlay receive real mouse clicks while it is drawn (spike 2 open item)
 - [ ] Fist 1 s → sleep; skeleton gone; `handos toggle` wakes and sleeps
-- [ ] `handos pause` → camera light off; `resume` → back
+- [ ] `handos pause` → camera light off and still off 10 s later (well past the 1 s watchdog), same tracker PID; `resume` → back
 - [ ] `handos calibrate` completes; afterwards the comfortable reach positions hit the output's edges, and `handos status` says the box comes from `calibration.yaml`
 - [ ] `kill -9` the tracker mid-drag → button released, tracker restarted
 - [ ] `kill -9` the daemon mid-drag → note whether Hyprland released the button (D2)

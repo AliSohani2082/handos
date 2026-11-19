@@ -194,7 +194,15 @@ impl Pointer {
                             update.events.push((finger, Phase::Fired));
                         }
                     }
-                    Action::Drag => self.pressed.release_all(&mut update.commands),
+                    Action::Drag => {
+                        // Drop where the hand is now, not where it was last frame. A cancel
+                        // releases immediately: its position is not trustworthy.
+                        if phase == Phase::Ended && move_pointer {
+                            push_move(&mut update.commands, map, position);
+                            move_pointer = false;
+                        }
+                        self.pressed.release_all(&mut update.commands);
+                    }
                     Action::Scroll { .. } => update.commands.push(PointerCmd::AxisStop),
                     Action::Pending { .. } => {}
                 }

@@ -98,6 +98,38 @@ fn click_drag_scroll_and_cancel_at_both_frame_rates() {
     }
 }
 
+#[test]
+fn a_drag_that_moves_on_its_last_frame_drops_at_the_new_position() {
+    for dt in [33_333, 66_667] {
+        let mut pointer = Pointer::default();
+        let closed = hand(true, false, 0.5, 0.5);
+        pointer.update(Some(&closed), mapping(), 0, true);
+        pointer.update(Some(&closed), mapping(), dt, true);
+        let held = pointer.update(Some(&closed), mapping(), dt + 310_000, true);
+        assert!(held.commands.contains(&button(Button::Left, true)));
+
+        let released = pointer.update(
+            Some(&hand(false, false, 0.7, 0.5)),
+            mapping(),
+            dt * 2 + 310_000,
+            true,
+        );
+        let [PointerCmd::Move { x, .. }, release] = released.commands.as_slice() else {
+            panic!(
+                "expected one move then the release, got {:?}",
+                released.commands
+            );
+        };
+        assert_eq!(*release, button(Button::Left, false));
+        let last_held = held.commands.iter().rev().find_map(|c| match c {
+            PointerCmd::Move { x, .. } => Some(*x),
+            _ => None,
+        });
+        assert!(last_held.is_some_and(|held_x| *x > held_x));
+        assert!(pointer.pressed().is_empty());
+    }
+}
+
 fn pose_hand(open: bool) -> HandState {
     let mut hand = hand(false, false, 0.5, 0.5);
     let mut world = [[0.0; 3]; 21];

@@ -58,8 +58,12 @@ class Camera:
             return latest
 
     def close(self):
+        # A stalled read() returns within the V4L select timeout (1 s, see __init__.py), after
+        # which the worker sees `stop` and releases the camera.
         self.stop.set()
-        self.thread.join()
+        self.thread.join(timeout=3.0)
+        if self.thread.is_alive():
+            raise OSError("camera capture thread did not stop")
 
 
 def probe(device: str) -> dict:

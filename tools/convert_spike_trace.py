@@ -9,6 +9,9 @@ from handos_tracker_mp.tracks import Associate
 
 
 def convert(source: Path, target: Path):
+    for output in (target, target.with_suffix(".reps.json")):
+        if output.exists() and output.samefile(source):  # also catches symlinks and hard links
+            raise ValueError(f"{output}: would overwrite the source recording")
     associate = Associate()
     windows = {"hold": [], "reps": []}
     seq = 0

@@ -128,10 +128,19 @@ class Associate:
             used_o.add(i)
             used_t.add(j)
         for i, o in enumerate(obs):
-            if i not in used_o:
-                taken = {t.label for t in tracks}
-                label = o.label if o.label not in taken else other(o.label)
-                tracks.append(Track(next(self.ids), label, obs=o, lm=o.lm, world=o.world))
+            if i in used_o:
+                continue
+            holders = [t for t in tracks if t.label == o.label]
+            if holders and all(t.obs is None for t in holders):
+                # The label belongs to a track not seen this frame: most likely this same hand
+                # jumped further than max_jump. Retire it rather than create a duplicate label.
+                tracks[:] = [t for t in tracks if t not in holders]
+                holders = []
+            taken = {t.label for t in tracks}
+            label = o.label if not holders else other(o.label)
+            if label in taken:
+                continue  # both labels are held by visible hands; wait for one to free up
+            tracks.append(Track(next(self.ids), label, obs=o, lm=o.lm, world=o.world))
         for tr in tracks:
             tr.missed = 0 if tr.obs is not None else tr.missed + 1
         tracks[:] = [t for t in tracks if t.missed <= self.max_missed]
@@ -145,13 +154,24 @@ class StickyLabel:
         for tr in tracks:
             o = tr.obs
             if o is None:
+                tr.disagree = 0  # only consecutive frames count; a dropout breaks the run
                 continue
             if o.label != tr.label and o.score >= self.min_score:
                 tr.disagree += 1
             else:
                 tr.disagree = 0
-            if tr.disagree >= self.flip_frames and all(x.label != o.label for x in tracks if x is not tr):
-                tr.label, tr.disagree = o.label, 0
+        ready = [tr for tr in tracks if tr.disagree >= self.flip_frames]
+        for tr in ready:
+            if tr.disagree < self.flip_frames:
+                continue  # already swapped with a partner below
+            want = tr.obs.label
+            holder = next((x for x in tracks if x is not tr and x.label == want), None)
+            if holder is None:
+                tr.label, tr.disagree = want, 0
+            elif holder.disagree >= self.flip_frames and holder.obs.label == tr.label:
+                # Both hands have long disagreed with each other's label: swap them together.
+                tr.label, holder.label = holder.label, tr.label
+                tr.disagree = holder.disagree = 0
 
 
 class OneEuroStage:
