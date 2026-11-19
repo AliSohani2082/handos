@@ -1,0 +1,17 @@
+[package]
+name = "handos-gesture"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+handos-hands = { path = "../handos-hands" }
+
+[dev-dependencies]
+handos-proto = { path = "../handos-proto" }
+proptest.workspace = true
+serde_json.workspace = true

@@ -5,7 +5,7 @@ Machine: Intel i7-8550U (4 cores, 2018), `powersave` governor, Hyprland 0.57.2, 
 
 | Spike | Verdict | One line |
 |---|---|---|
-| 1. Two-hand tracking | **GO** | Palm touch 50 of 50, pluck 49 of 50, no swaps, no dropout over 150 ms; tracker runs at only 15 fps on this CPU |
+| 1. Two-hand tracking | **GO** | Palm touch 50 of 50, pluck 49 of 50, no swaps, no dropout over 150 ms; tracker can reach 35 fps but costs 61–111% of a core |
 | 2. Overlay cost | CPU drawing **NO-GO**; GPU drawing **GO at tracking rate** | tiny-skia 24–26%; wgpu 6.8% at 60 fps and 2.4% at 18 fps; Hyprland adds 4–10% either way |
 | 3. Input and text | **GO** | 56 of 56 clicks at 0 px; keymap typing exact in all four apps in both languages; paste fails everywhere |
 | 4. Script runtime | **GO** | 10 attacks survived; reload 0.7 ms; memory flat |
@@ -27,6 +27,9 @@ Recorded in good light only. The dim-light sessions were dropped by decision. Da
   ```bash
   uv run record.py --task palm --light good --reps 0 --hold-seconds 20
   ```
+
+- **15 fps was the recorder, not the model.** Replaying the recorded sessions through the same model with no UI and no video encoding (`uv run ceiling.py data/<session>.mp4`) gives about 35 fps with two hands in every frame, with inference at 27–28 ms p50. The recorder lost the other half of each frame to mp4 encoding and drawing. **CPU is the real limit.** Over two runs the tracker used 90–111% of a core paced at 30 fps and 61–74% at 15 fps, against the PRD's 35% for tracker and daemon together. CPU per frame rises at lower rates, which suggests MediaPipe's worker threads spin between frames (not tested). The design doc now uses an adaptive rate and marks the CPU budget at risk; the Python tracker is exempt until M5.
+- **Resource use of `live.py`** is tracked per optimization commit in `two-hand/OPTIMIZATION.md` (measured with `two-hand/bench.py`).
 
 ## Spike 2: overlay cost — NO-GO
 
