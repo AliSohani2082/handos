@@ -42,6 +42,17 @@ pub fn instances(list: &DisplayList, scale: f32, out: &mut Vec<Inst>) {
     }));
 }
 
+/// What happened to a frame.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Presented {
+    /// Committed to the surface.
+    Done,
+    /// No texture this time (resize in flight); nothing was committed. Try again.
+    Skipped,
+    /// The surface is gone; drop this `Gpu` and create a new one on the same `wl_surface`.
+    Lost,
+}
+
 #[derive(Debug, thiserror::Error)]
 pub enum RenderError {
     #[error("cannot create a GPU surface: {0}")]
@@ -113,14 +124,21 @@ impl Gpu {
             .find(|f| !f.is_srgb())
             .or_else(|| caps.formats.first().copied())
             .ok_or_else(|| RenderError::Surface("the surface offers no formats".into()))?;
+        // The shader writes premultiplied colour. Wayland buffers are premultiplied too, so
+        // `Inherit` is equivalent there. Anything else would blend wrongly or, if opaque, cover
+        // the desktop: refuse rather than guess.
         let alpha_mode = [
             wgpu::CompositeAlphaMode::PreMultiplied,
-            wgpu::CompositeAlphaMode::PostMultiplied,
+            wgpu::CompositeAlphaMode::Inherit,
         ]
         .into_iter()
         .find(|m| caps.alpha_modes.contains(m))
-        .or_else(|| caps.alpha_modes.first().copied())
-        .ok_or_else(|| RenderError::Surface("the surface offers no alpha modes".into()))?;
+        .ok_or_else(|| {
+            RenderError::Surface(format!(
+                "no premultiplied alpha mode (offered {:?}): the overlay could not be transparent",
+                caps.alpha_modes
+            ))
+        })?;
         let present_mode = if caps.present_modes.contains(&wgpu::PresentMode::Mailbox) {
             wgpu::PresentMode::Mailbox
         } else {
@@ -244,17 +262,18 @@ impl Gpu {
             .write_buffer(&self.globals, 0, bytemuck::cast_slice(&size));
     }
 
-    /// Records, submits and presents one frame (an empty list clears the surface). Returns
-    /// false when no texture was available, in which case nothing was committed.
-    pub fn render(&mut self, list: &DisplayList) -> bool {
+    /// Records, submits and presents one frame (an empty list clears the surface).
+    pub fn render(&mut self, list: &DisplayList) -> Presented {
         let frame = match self.surface.get_current_texture() {
             wgpu::CurrentSurfaceTexture::Success(t)
             | wgpu::CurrentSurfaceTexture::Suboptimal(t) => t,
-            wgpu::CurrentSurfaceTexture::Outdated | wgpu::CurrentSurfaceTexture::Lost => {
+            wgpu::CurrentSurfaceTexture::Outdated => {
                 self.surface.configure(&self.device, &self.config);
-                return false;
+                return Presented::Skipped;
             }
-            _ => return false,
+            // A lost surface cannot be revived by reconfiguring it; the owner recreates `Gpu`.
+            wgpu::CurrentSurfaceTexture::Lost => return Presented::Lost,
+            _ => return Presented::Skipped,
         };
         instances(list, self.scale, &mut self.scratch);
         if !self.scratch.is_empty() {
@@ -286,7 +305,7 @@ impl Gpu {
         }
         self.queue.submit([enc.finish()]);
         self.queue.present(frame);
-        true
+        Presented::Done
     }
 }
 

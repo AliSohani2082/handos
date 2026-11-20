@@ -14,6 +14,8 @@ use std::{
     process::{Child, Command},
 };
 
+use std::os::unix::process::CommandExt;
+
 use anyhow::{Context, Result, bail};
 
 pub struct Listener {
@@ -231,10 +233,13 @@ fn owned(fd: i32) -> io::Result<OwnedFd> {
 pub struct Tracker(Child);
 
 impl Tracker {
+    /// Starts the tracker as the leader of its own process group, so `Drop` can stop everything
+    /// it started (a wrapper such as `uv run` has the real tracker as a grandchild).
     pub fn spawn(command: &Path, socket: &Path) -> io::Result<Self> {
         Command::new(command)
             .arg("--socket")
             .arg(socket)
+            .process_group(0)
             .spawn()
             .map(Self)
     }
@@ -257,7 +262,12 @@ impl Tracker {
 }
 
 impl Drop for Tracker {
+    /// Used on shutdown and on every restart (exit, stall): kills the whole group, so no tracker
+    /// process keeps the camera open, then reaps the direct child.
     fn drop(&mut self) {
+        // SAFETY: kill takes a pid and a signal; a negative pid names the process group that
+        // `spawn` created with this child as its leader.
+        unsafe { libc::kill(-(self.0.id() as libc::pid_t), libc::SIGKILL) };
         let _ = self.0.kill();
         let _ = self.0.wait();
     }
@@ -274,5 +284,50 @@ mod tests {
         assert!(descends_from(me, me));
         assert!(descends_from(me, parent));
         assert!(!descends_from(parent, me));
+    }
+
+    #[test]
+    fn dropping_a_tracker_stops_what_its_wrapper_started() {
+        use std::os::unix::fs::PermissionsExt;
+        let dir = tempfile::tempdir().expect("temp dir");
+        let pidfile = dir.path().join("grandchild.pid");
+        let script = dir.path().join("wrapper");
+        // Like `uv run`: the wrapper starts the real tracker as a child and waits for it.
+        fs::write(
+            &script,
+            format!(
+                "#!/bin/sh\nsleep 30 &\necho $! > '{}'\nwait\n",
+                pidfile.display()
+            ),
+        )
+        .expect("write wrapper");
+        fs::set_permissions(&script, fs::Permissions::from_mode(0o700)).expect("chmod");
+        let tracker = Tracker::spawn(&script, Path::new("/unused")).expect("spawn");
+        let grandchild: libc::pid_t = loop {
+            if let Some(pid) = fs::read_to_string(&pidfile)
+                .ok()
+                .and_then(|s| s.trim().parse().ok())
+            {
+                break pid;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(10));
+        };
+        drop(tracker);
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(2);
+        // SAFETY: signal 0 only checks that the process exists.
+        while unsafe { libc::kill(grandchild, 0) } == 0 {
+            let stat = fs::read_to_string(format!("/proc/{grandchild}/stat")).unwrap_or_default();
+            if stat
+                .rsplit_once(')')
+                .is_some_and(|(_, rest)| rest.trim_start().starts_with('Z'))
+            {
+                break; // killed, waiting for init to reap it
+            }
+            assert!(
+                std::time::Instant::now() < deadline,
+                "the wrapper's child kept running"
+            );
+            std::thread::sleep(std::time::Duration::from_millis(10));
+        }
     }
 }

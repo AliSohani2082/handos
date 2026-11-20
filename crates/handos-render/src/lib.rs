@@ -8,5 +8,5 @@ pub mod skeleton;
 
 pub use display_list::{DisplayList, Prim};
 #[cfg(feature = "gpu")]
-pub use gpu::{Gpu, RenderError};
+pub use gpu::{Gpu, Presented, RenderError};
 pub use skeleton::{Style, skeleton};

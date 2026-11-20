@@ -196,10 +196,14 @@ impl Daemon {
         Ok(PostAction::Continue)
     }
 
+    /// The tracker closed its socket: no more frames will come to release buttons or clear the
+    /// overlay, so do it now rather than when the watchdog notices.
     fn disconnected(&mut self) {
         self.connection = None;
         self.sender = None;
         self.rate = None;
+        let desktop = desktop_mut(&mut self.wayland, &mut self.headless);
+        self.pipeline.suspend(desktop);
     }
 
     fn invalid(&mut self, err: impl std::fmt::Display) {

@@ -4,7 +4,7 @@
 use std::{os::fd::AsRawFd, ptr::NonNull, time::Duration};
 
 use handos_platform::{DisplayList, OutputId, OutputInfo, Overlay, PlatformError};
-use handos_render::Gpu;
+use handos_render::{Gpu, Presented};
 use smithay_client_toolkit::{
     compositor::{CompositorHandler, CompositorState, FrameCallbackData, Region},
     shell::{
@@ -94,14 +94,15 @@ impl Surface {
     /// Draws `list` now, creating the GPU on first use. Content asks for a frame callback (so the
     /// next list waits for the compositor); an empty list does not, since Hyprland sends no
     /// callback for an unchanged surface and a clear must never wait for one.
+    /// Returns whether the frame was committed.
     fn present(
         &mut self,
         conn: &Connection,
         qh: &QueueHandle<Wayland>,
         list: &DisplayList,
-    ) -> Result<(), PlatformError> {
+    ) -> Result<bool, PlatformError> {
         if self.failed {
-            return Ok(());
+            return Ok(false);
         }
         if self.gpu.is_none() {
             let display = NonNull::new(conn.backend().display_ptr().cast());
@@ -133,17 +134,28 @@ impl Surface {
             wl_surface.frame(qh, FrameCallbackData(wl_surface.clone()));
         }
         let Some(gpu) = &mut self.gpu else {
-            return Ok(());
+            return Ok(false);
         };
-        if gpu.render(list) {
-            self.frame_pending = !list.is_empty();
-            self.showing = !list.is_empty();
-            self.pending = None;
-        } else {
-            // No texture this time (resize in flight): keep the list for the next chance.
-            self.pending = Some(list.clone());
+        match gpu.render(list) {
+            Presented::Done => {
+                self.frame_pending = !list.is_empty();
+                self.showing = !list.is_empty();
+                self.pending = None;
+                Ok(true)
+            }
+            Presented::Skipped => {
+                // No texture this time (resize in flight): keep the list for the next chance.
+                self.pending = Some(list.clone());
+                Ok(false)
+            }
+            Presented::Lost => {
+                // Recreated on the next present, on the same live wl_surface.
+                tracing::warn!("overlay GPU surface lost; recreating it");
+                self.gpu = None;
+                self.pending = Some(list.clone());
+                Ok(false)
+            }
         }
-        Ok(())
     }
 }
 
@@ -173,7 +185,7 @@ impl Overlay for Wayland {
             surface.pending = Some(list.clone());
             return Ok(());
         }
-        surface.present(&self.conn, &self.qh, list)
+        surface.present(&self.conn, &self.qh, list).map(drop)
     }
 
     fn clear(&mut self, output: OutputId) {
@@ -186,11 +198,22 @@ impl Overlay for Wayland {
             return;
         };
         surface.pending = None;
-        if surface.showing {
-            if let Err(err) = surface.present(&self.conn, &self.qh, &DisplayList::default()) {
-                tracing::warn!(%err, "could not clear the overlay");
+        if !surface.showing {
+            return;
+        }
+        surface.frame_pending = false;
+        match surface.present(&self.conn, &self.qh, &DisplayList::default()) {
+            Ok(true) => {}
+            outcome => {
+                // The skeleton would stay on screen until the next draw, and after a suspend no
+                // draw comes: destroy the surface instead (recreated on the next draw).
+                if let Err(err) = outcome {
+                    tracing::warn!(%err, "could not clear the overlay");
+                }
+                if let Some(out) = self.outputs.iter_mut().find(|o| o.info.id == output) {
+                    out.surface = None;
+                }
             }
-            surface.frame_pending = false;
         }
     }
 }

@@ -114,16 +114,13 @@ impl Pipeline {
         let mode_changed = self.clutch.update(hands, now_us).map(|changed| changed.0);
         let awake = self.clutch.mode() == Mode::Default;
         if awake {
-            let outputs = desktop.outputs();
-            let stale = self
-                .target
-                .as_ref()
-                .is_none_or(|t| !outputs.iter().any(|o| o.id == t.id));
-            if mode_changed == Some(Mode::Default) || stale {
-                self.target = choose_target(&outputs, focused().as_deref());
-                if let Some(target) = &self.target {
-                    tracing::info!(output = target.name, "pointer output");
-                }
+            let woke = mode_changed == Some(Mode::Default);
+            let before = self.target.as_ref().map(|t| t.id);
+            self.target = select_target(self.target.take(), &desktop.outputs(), woke, focused);
+            if let Some(target) = &self.target
+                && (woke || before != Some(target.id))
+            {
+                tracing::info!(output = target.name, "pointer output");
             }
         }
         let mapping = self
@@ -196,6 +193,22 @@ fn warn_once(warned: &mut bool, err: &PlatformError) {
     if !*warned {
         *warned = true;
         tracing::warn!(%err, "overlay draw failed; drawing continues on the next frame");
+    }
+}
+
+/// The output the pointer maps to this frame. The current one is kept, with its geometry
+/// refreshed (a mode or scale change must reach the mapping); the focused output is chosen again
+/// only on wake or when the current one has gone.
+fn select_target(
+    current: Option<OutputInfo>,
+    outputs: &[OutputInfo],
+    woke: bool,
+    focused: &dyn Fn() -> Option<String>,
+) -> Option<OutputInfo> {
+    let refreshed = current.and_then(|t| outputs.iter().find(|o| o.id == t.id).cloned());
+    match refreshed {
+        Some(target) if !woke => Some(target),
+        _ => choose_target(outputs, focused().as_deref()),
     }
 }
 
@@ -345,6 +358,25 @@ mod tests {
         );
         assert_eq!(choose_target(&outputs, None).unwrap().id, OutputId(1));
         assert!(choose_target(&[], None).is_none());
+    }
+
+    #[test]
+    fn the_target_keeps_its_id_but_takes_new_geometry() {
+        let focused = || Some("HDMI-A-1".to_owned());
+        let mut outputs = vec![output(1, "eDP-1"), output(2, "HDMI-A-1")];
+        let target = select_target(None, &outputs, true, &focused);
+        assert_eq!(target.as_ref().map(|t| t.id), Some(OutputId(2)));
+        // The monitor changes mode while awake; focus moves elsewhere but that is not a wake.
+        outputs[1].logical_rect.width = 2560;
+        let target = select_target(target, &outputs, false, &|| Some("eDP-1".to_owned()));
+        assert_eq!(
+            target.as_ref().map(|t| (t.id, t.logical_rect.width)),
+            Some((OutputId(2), 2560))
+        );
+        // Unplugged: fall back to the focused output.
+        outputs.remove(1);
+        let target = select_target(target, &outputs, false, &|| Some("eDP-1".to_owned()));
+        assert_eq!(target.map(|t| t.id), Some(OutputId(1)));
     }
 
     #[test]

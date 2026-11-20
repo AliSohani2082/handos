@@ -69,6 +69,43 @@ pub fn replay(path: &Path, options: &ReplayOptions) -> Result<()> {
     };
     let mut headless = Headless;
     let mut pipeline = Pipeline::new(Config::default());
+    let played = play(
+        &mut reader,
+        options,
+        &mut pipeline,
+        &mut wayland,
+        &mut headless,
+    );
+    // Release what the replay pressed and clear the overlay whether or not the trace was good:
+    // after an error, no further frame would do it.
+    let cleanup = match &mut wayland {
+        Some((wayland, queue)) => {
+            pipeline.suspend(wayland);
+            dispatch(queue, wayland, DISPATCH_SLICE).context("flush the final input events")
+        }
+        None => Ok(()),
+    };
+    let (frames, mode_changes) = played?;
+    cleanup?;
+    tracing::info!(frames, mode_changes, "replay complete");
+    Ok(())
+}
+
+/// Feeds every frame of the trace to the pipeline on the trace's clock. Returns the frame count
+/// and the number of mode changes.
+fn play(
+    reader: &mut TraceReader<BufReader<File>>,
+    options: &ReplayOptions,
+    pipeline: &mut Pipeline,
+    wayland: &mut Option<(Wayland, EventQueue<Wayland>)>,
+    headless: &mut Headless,
+) -> Result<(u64, u64)> {
+    // Headless replays never ask the compositor anything.
+    let focused: &dyn Fn() -> Option<String> = if wayland.is_some() {
+        &hyprland::focused_monitor
+    } else {
+        &|| None
+    };
     let mut packet = Vec::new();
     let mut first = None;
     let mut previous = None;
@@ -90,9 +127,9 @@ pub fn replay(path: &Path, options: &ReplayOptions) -> Result<()> {
         }
         previous = Some(now);
         let base = *first.get_or_insert(now);
-        let due = if speed > 0.0 {
+        let due = if options.speed > 0.0 {
             Some(
-                Duration::try_from_secs_f64((now - base) as f64 / (1_000_000.0 * speed))
+                Duration::try_from_secs_f64((now - base) as f64 / (1_000_000.0 * options.speed))
                     .context("trace time is out of range at this replay speed")?,
             )
         } else {
@@ -102,24 +139,15 @@ pub fn replay(path: &Path, options: &ReplayOptions) -> Result<()> {
         if options.awake && frames.count == 0 && pipeline.set_mode(Mode::Default, now).is_some() {
             mode_changes += 1;
         }
-        let desktop: &mut dyn Desktop = match &mut wayland {
+        let desktop: &mut dyn Desktop = match wayland {
             Some((wayland, _)) => wayland,
-            None => &mut headless,
+            None => headless,
         };
-        let step = pipeline.on_frame(&frame, now, desktop, &hyprland::focused_monitor);
+        let step = pipeline.on_frame(&frame, now, desktop, focused);
         mode_changes += u64::from(step.mode_changed.is_some());
         frames.on_frame(&frame);
     }
-    let desktop: &mut dyn Desktop = match &mut wayland {
-        Some((wayland, _)) => wayland,
-        None => &mut headless,
-    };
-    pipeline.suspend(desktop);
-    if let Some((wayland, queue)) = &mut wayland {
-        dispatch(queue, wayland, DISPATCH_SLICE)?;
-    }
-    tracing::info!(frames = frames.count, mode_changes, "replay complete");
-    Ok(())
+    Ok((frames.count, mode_changes))
 }
 
 /// Sleeps until `due` after `started`, handling Wayland events meanwhile; with no `due`, only

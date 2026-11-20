@@ -2,7 +2,7 @@
 
 handOs lets you control a Linux desktop with your hands through a webcam. A Python tracker runs MediaPipe on camera frames and sends hand landmarks over a Unix socket to a Rust daemon. The daemon conditions the landmarks, recognises gestures, and drives the pointer.
 
-> **Status: milestone M1 (pointer) is in progress.** The tracker, wire protocol, trace record and replay, hand conditioning and gesture state machines are built and tested. The daemon currently **receives, logs and records** live hand data. It does **not yet move the pointer or draw an overlay**: the Wayland overlay and input backend come in Phase C, and settings, the control socket and the `status`/`toggle`/`doctor`/`bench` commands come in Phase D. The full plan is in `.claude/PRPs/plans/handos-m1-pointer.plan.md`.
+> **Status: milestone M1 (pointer) is in progress.** Phases A to C are built: the tracker, wire protocol, trace record and replay, hand conditioning, gesture state machines and the Wayland backend. The daemon runs every frame through that pipeline: it **draws hand skeletons on a click-through overlay and moves the pointer** on the focused output (`--headless` runs it without a display). Pinch clicks rarely fire yet: real clicks don't reach the pinch threshold, which calibration settles in Phase D (see `.claude/PRPs/reports/handos-m1-pointer-phase-c-report.md`). Settings, the control socket, calibration and the `status`/`toggle`/`doctor`/`bench` commands come in Phase D. The full plan is in `.claude/PRPs/plans/handos-m1-pointer.plan.md`.
 
 ## How it fits together
 
@@ -14,7 +14,7 @@ handOs lets you control a Linux desktop with your hands through a webcam. A Pyth
                  ├─ spawns the tracker and restarts it if it stalls or exits
                  ├─ validates packets (protocol version, size, shape)
                  ├─ optionally records them to a .htrace file
-                 └─ (Phase C) hands → gestures → pointer and overlay
+                 └─ hands → gestures → virtual pointer and layer-shell overlay
 ```
 
 The daemon starts the tracker itself. You don't run the two side by side.
@@ -23,7 +23,7 @@ The daemon starts the tracker itself. You don't run the two side by side.
 
 | Need | Version | Notes |
 |---|---|---|
-| Linux | any recent | Uses Unix sockets, `flock` and `XDG_RUNTIME_DIR`. The target desktop is Wayland (developed on Hyprland). |
+| Linux | any recent | Uses Unix sockets, `flock` and `XDG_RUNTIME_DIR`. The daemon needs a Wayland compositor with wlr layer shell and virtual pointer manager version 2. Hyprland is the target desktop. `--headless` needs neither. |
 | Rust | stable (pinned by `rust-toolchain.toml`) | Developed with 1.99. `rustup` installs rustfmt and clippy automatically. |
 | Python | 3.12 or newer | For the tracker. The stub tracker in one Rust test runs on any `python3`. |
 | [uv](https://docs.astral.sh/uv/) | 0.12 | Manages the tracker's virtualenv and lockfile. |
@@ -51,8 +51,7 @@ uv tool install ./trackers/mediapipe-py
 If you'd rather not install the tracker globally, create its virtualenv in place and point the daemon at it (see [Run](#run)):
 
 ```bash
-cd trackers/mediapipe-py
-uv sync
+(cd trackers/mediapipe-py && uv sync)
 # the tracker is now at trackers/mediapipe-py/.venv/bin/handos-tracker-mp
 ```
 
@@ -73,6 +72,10 @@ The file is checked against a pinned SHA-256 every time it loads. If the check f
 ```bash
 handos-tracker-mp --probe                      # default /dev/video0
 handos-tracker-mp --probe --camera /dev/video2
+
+# installed with uv sync instead (from the repository root)
+trackers/mediapipe-py/.venv/bin/handos-tracker-mp --probe
+trackers/mediapipe-py/.venv/bin/handos-tracker-mp --probe --camera /dev/video2
 ```
 
 This prints the resolution and frame rate the camera actually gives as JSON, then exits. The tracker asks for 640x480 MJPG at 30 fps.
@@ -91,10 +94,13 @@ Press Ctrl+C (or send SIGTERM) to stop. On startup the daemon:
 
 1. creates `$XDG_RUNTIME_DIR/handos/` with mode 0700, refusing to continue if the directory is owned by someone else or has looser permissions,
 2. takes an exclusive lock (a second daemon exits with `daemon already running`),
-3. listens on `tracker.sock` and spawns `<tracker> --socket <path>`,
-4. accepts packets only from the process it spawned (checked with the peer PID).
+3. listens on `tracker.sock` and spawns `<tracker> --socket <path>` in its own process group,
+4. accepts packets only from the process it spawned or its descendants (checked with the peer PID), so a tracker started through a wrapper such as `uv run` works,
+5. unless `--headless`, connects to the Wayland display and picks one Vulkan driver (the Intel, else AMD, GPU's).
 
-If the tracker fails to connect within 30 s or stops sending frames for 1 s, the daemon kills it and starts a new one, waiting 1, 2, then 5 s between attempts.
+If the tracker fails to connect within 30 s or stops sending frames for 1 s, the daemon kills its whole process group and starts a new one, waiting 1, 2, then 5 s between attempts. Whenever the tracker goes away, and on shutdown, the daemon first releases any held button and clears the overlay.
+
+Wake handOs with an open palm held toward the camera for half a second. The pointer follows the right hand on the monitor Hyprland reports as focused at that moment. A fist held for a second puts it back to sleep.
 
 You'll see `tracker connected` with the camera size, then a `tracker status` line with fps, inference time and dropped frames each time the tracker reports.
 
@@ -102,9 +108,9 @@ You'll see `tracker connected` with the camera size, then a `tracker status` lin
 
 | Command | What it does |
 |---|---|
-| `handos daemon [--tracker PATH] [--record FILE]` | Run the daemon. `--tracker` defaults to `handos-tracker-mp` on PATH. `--record` also writes every valid packet to `FILE`. |
+| `handos daemon [--tracker PATH] [--record FILE] [--headless]` | Run the daemon. `--tracker` defaults to `handos-tracker-mp` on PATH. `--record` also writes every valid packet to `FILE`. `--headless` runs the pipeline without drawing or moving the pointer. |
 | `handos trace record FILE` | Same as `daemon --record FILE` with the default tracker. |
-| `handos trace replay FILE [--speed X] [--headless]` | Play a trace through the frame pipeline on its original clock. `--speed 2` plays twice as fast; `--speed 0` plays as fast as possible. `--headless` runs without a Wayland display. |
+| `handos trace replay FILE [--speed X] [--headless] [--awake]` | Play a trace through the frame pipeline on its original clock. `--speed 2` plays twice as fast; `--speed 0` plays as fast as possible. Without `--headless`, the skeletons appear on the overlay and **the system pointer moves**. `--awake` starts awake instead of waiting for the wake gesture. |
 | `handos --help`, `handos <cmd> --help` | Usage. |
 
 Recording never overwrites: if `FILE` already exists, the command fails.
@@ -155,7 +161,7 @@ What the suites cover:
 | `handos-hands` `tests/replay.rs` | Hand identity, outlier rejection, 1€ filter and prediction on recorded traces |
 | `handos-gesture` `tests/actions.rs`, `tests/replay.rs` | Wake/sleep clutch, pinch click vs drag, scroll and claims, plus a replay of `pluck-good.htrace` |
 | `handos` `tests/daemon.rs` | Starts the real binary with a stub tracker, sends one bad packet and one valid frame, and checks that only the valid one is recorded and the socket is released |
-| `handos` `tests/replay.rs` | Both recorded traces replay with every frame and hold window intact |
+| `handos` `tests/replay.rs` | The recorded traces replay with every frame and hold window intact; the pipeline draws only on the focused output and leaves no button held. A click test on `click-good.htrace` is ignored until Phase D sets the pinch threshold |
 | `trackers/mediapipe-py/tests` | Packet encoding against the Rust golden packet, camera handedness label conversion, and track IDs that survive reordering and brief dropout |
 
 The `daemon` integration test runs a small Python 3 script as its stub tracker, so `python3` must be on PATH for `cargo test`.
@@ -169,6 +175,7 @@ The `daemon` integration test runs a small Python 3 script as its stub tracker, 
 | `palm-good.htrace` + `.reps.json` | Palm-touch session from the M0 spike, with hold and rep time windows |
 | `pluck-good.htrace` + `.reps.json` | Fingertip-pluck session from the M0 spike |
 | `live-check.htrace` | A short live recording from the M1 tracker |
+| `click-good.htrace` + `.reps.json` | 50 guided thumb-to-index clicks (`spikes/two-hand/record.py --task click`) |
 
 `tools/convert_spike_trace.py` converts an old M0 JSONL recording into an `.htrace` file plus its `.reps.json` windows. It imports the tracker package, so run it through the tracker's environment:
 
@@ -180,13 +187,13 @@ uv run --project trackers/mediapipe-py python tools/convert_spike_trace.py old.j
 
 ```
 crates/
-  handos/                    the binary: CLI, daemon loop, tracker process, trace commands
+  handos/                    the binary: CLI, daemon loop, tracker process, trace commands, per-frame pipeline
   handos-proto/              wire protocol: HandFrame encoding, control messages, .htrace files
   handos-hands/              hand conditioning: stable identity, outliers, 1€ filter, prediction, features
   handos-gesture/            pure gesture state machines: clutch, pinch phases, pointer mapping, claims
-  handos-render/             display list for the overlay (wgpu backend arrives in Phase C)
+  handos-render/             display list, skeleton drawing and the wgpu backend
   handos-platform/           Overlay and Input traits plus recording fakes (feature `fake`)
-  handos-platform-wayland/   Wayland backend (placeholder until Phase C)
+  handos-platform-wayland/   Wayland backend: overlay, virtual pointer, Vulkan driver choice, Hyprland focus
 trackers/mediapipe-py/       the Python MediaPipe tracker (uv project)
 traces/                      recorded traces used by the tests
 tools/                       one-off scripts
