@@ -349,6 +349,7 @@ See the [Phase B report](../reports/handos-m1-pointer-phase-b-report.md) for the
 - **ACTION**: Record real thumb-to-index clicks with annotated repetitions.
 - **IMPLEMENT**: Add `--task click` to `spikes/two-hand/record.py` and `guide.py`: 50 reps, 1 s "ready" with the right hand open, then "go" = pinch thumb to index and release. Record `click-good` in good light, convert it with A6's tool to `traces/click-good.htrace` + `traces/click-good.reps.json`, commit both.
 - **VALIDATE**: The B9 replay test reaches ≥ 45 of 50. If it does not, log the per-rep minimum 3D gap and revisit the default threshold with that distribution (calibration, D7, adjusts it per user).
+- **RESULT** (recorded 2026-11-19, `traces/click-good.htrace`): 0 of 50. MediaPipe's world landmarks never close the pinch: per click, the smallest 3D thumb–index gap is 0.373–0.587 hu (median 0.49) against 0.30 to begin, while the open hand sits at a median 1.35 hu. In the image the same clicks close to a median 0.10 hu (open 1.18). Re-anchoring the 3D formula on this data (open 1.0, closed 0.45) reached only 37 of 50. Decided: settle the threshold in D7, not by retuning B5 on one session; the C7 click test stays ignored until then.
 
 ### Phase C — Overlay, rendering and input on Wayland (PR 3)
 
@@ -438,6 +439,7 @@ See the [Phase B report](../reports/handos-m1-pointer-phase-b-report.md) for the
   - Use: `pinch(f).strength = clamp((open_hu − d/hu) / (open_hu − closed_hu), 0, 1)` (defaults 0.60 and 0.20 reproduce B5's formula). Precedence: an explicit `mapping.box` in `handos.yaml` > `calibration.yaml` > built-in default; `handos calibrate` warns when `handos.yaml` sets `mapping.box`, because that value would win. `handos status` reports which source is in use; `handos doctor` reports whether a calibration exists.
 - **MIRROR**: D1's strict parsing (`deny_unknown_fields`, serde-saphyr options) for reading `calibration.yaml`; D3's JSON-RPC style.
 - **GOTCHA**: Capture the palm centre, not the pointer (landmark 5): the box is defined on the palm centre (B8 step 1). Mirror space, so "left" is the user's left as seen on screen. Calibrate with the pointer hand (`pointer.hand`); the box applies to both hands.
+- **GOTCHA**: The B10 recording shows the 3D pinch never gets below about 0.4 hu on real clicks (see B10 RESULT), so B5's default `closed_hu` 0.20 is unreachable. D7 must pick its defaults (or switch the pinch to image distance, which closes to about 0.10 hu but shrinks when the hand turns edge-on) from `traces/click-good.htrace`, then un-ignore `recorded_clicks_begin_inside_their_rep_windows` in `crates/handos/tests/replay.rs` and reach 45 of 50.
 - **VALIDATE**: unit tests: box from four samples; rejection of a too-small box and too-close pinch distances; precedence of the three sources; strength formula equals B5's at the defaults. Headless test: `handos daemon --headless --replay traces/palm-good.htrace` + `calibrate.capture { what: "pinch_open" }` returns a value within the trace's range. Manual: after calibrating, the comfortable left/right/top/bottom positions reach the output's edges.
 
 #### Task D8: Exit tests and budget record

@@ -4,6 +4,7 @@
   uv run record.py --task pluck --light good
   uv run record.py --task palm  --light dim
   uv run record.py --task pluck --light dim
+  uv run record.py --task click --light good    # M1 Task B10: 50 pinch clicks, one hand
 
 Each session: 3 s countdown, a hold phase (both hands still, palms to the camera), then N reps.
 A rep is 1 s "READY" (hands apart) and 2 s "TOUCH"/"PLUCK" in which you do the gesture once.
@@ -83,7 +84,7 @@ def draw(frame, hands: list[Hand], prompt: str, colour) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--task", choices=["palm", "pluck"], required=True)
+    ap.add_argument("--task", choices=["palm", "pluck", "click"], required=True)
     ap.add_argument("--light", choices=["good", "dim"], required=True)
     ap.add_argument("--reps", type=int, default=50)
     ap.add_argument("--rep-seconds", type=float, default=3.0)

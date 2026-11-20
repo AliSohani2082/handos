@@ -1,0 +1,310 @@
+{
+  "hold": [
+    {
+      "start_us": 3000000,
+      "end_us": 7000000
+    }
+  ],
+  "reps": [
+    {
+      "i": 0,
+      "task": "click",
+      "start_us": 8000000,
+      "end_us": 10000000
+    },
+    {
+      "i": 1,
+      "task": "click",
+      "start_us": 11000000,
+      "end_us": 13000000
+    },
+    {
+      "i": 2,
+      "task": "click",
+      "start_us": 14000000,
+      "end_us": 16000000
+    },
+    {
+      "i": 3,
+      "task": "click",
+      "start_us": 17000000,
+      "end_us": 19000000
+    },
+    {
+      "i": 4,
+      "task": "click",
+      "start_us": 20000000,
+      "end_us": 22000000
+    },
+    {
+      "i": 5,
+      "task": "click",
+      "start_us": 23000000,
+      "end_us": 25000000
+    },
+    {
+      "i": 6,
+      "task": "click",
+      "start_us": 26000000,
+      "end_us": 28000000
+    },
+    {
+      "i": 7,
+      "task": "click",
+      "start_us": 29000000,
+      "end_us": 31000000
+    },
+    {
+      "i": 8,
+      "task": "click",
+      "start_us": 32000000,
+      "end_us": 34000000
+    },
+    {
+      "i": 9,
+      "task": "click",
+      "start_us": 35000000,
+      "end_us": 37000000
+    },
+    {
+      "i": 10,
+      "task": "click",
+      "start_us": 38000000,
+      "end_us": 40000000
+    },
+    {
+      "i": 11,
+      "task": "click",
+      "start_us": 41000000,
+      "end_us": 43000000
+    },
+    {
+      "i": 12,
+      "task": "click",
+      "start_us": 44000000,
+      "end_us": 46000000
+    },
+    {
+      "i": 13,
+      "task": "click",
+      "start_us": 47000000,
+      "end_us": 49000000
+    },
+    {
+      "i": 14,
+      "task": "click",
+      "start_us": 50000000,
+      "end_us": 52000000
+    },
+    {
+      "i": 15,
+      "task": "click",
+      "start_us": 53000000,
+      "end_us": 55000000
+    },
+    {
+      "i": 16,
+      "task": "click",
+      "start_us": 56000000,
+      "end_us": 58000000
+    },
+    {
+      "i": 17,
+      "task": "click",
+      "start_us": 59000000,
+      "end_us": 61000000
+    },
+    {
+      "i": 18,
+      "task": "click",
+      "start_us": 62000000,
+      "end_us": 64000000
+    },
+    {
+      "i": 19,
+      "task": "click",
+      "start_us": 65000000,
+      "end_us": 67000000
+    },
+    {
+      "i": 20,
+      "task": "click",
+      "start_us": 68000000,
+      "end_us": 70000000
+    },
+    {
+      "i": 21,
+      "task": "click",
+      "start_us": 71000000,
+      "end_us": 73000000
+    },
+    {
+      "i": 22,
+      "task": "click",
+      "start_us": 74000000,
+      "end_us": 76000000
+    },
+    {
+      "i": 23,
+      "task": "click",
+      "start_us": 77000000,
+      "end_us": 79000000
+    },
+    {
+      "i": 24,
+      "task": "click",
+      "start_us": 80000000,
+      "end_us": 82000000
+    },
+    {
+      "i": 25,
+      "task": "click",
+      "start_us": 83000000,
+      "end_us": 85000000
+    },
+    {
+      "i": 26,
+      "task": "click",
+      "start_us": 86000000,
+      "end_us": 88000000
+    },
+    {
+      "i": 27,
+      "task": "click",
+      "start_us": 89000000,
+      "end_us": 91000000
+    },
+    {
+      "i": 28,
+      "task": "click",
+      "start_us": 92000000,
+      "end_us": 94000000
+    },
+    {
+      "i": 29,
+      "task": "click",
+      "start_us": 95000000,
+      "end_us": 97000000
+    },
+    {
+      "i": 30,
+      "task": "click",
+      "start_us": 98000000,
+      "end_us": 100000000
+    },
+    {
+      "i": 31,
+      "task": "click",
+      "start_us": 101000000,
+      "end_us": 103000000
+    },
+    {
+      "i": 32,
+      "task": "click",
+      "start_us": 104000000,
+      "end_us": 106000000
+    },
+    {
+      "i": 33,
+      "task": "click",
+      "start_us": 107000000,
+      "end_us": 109000000
+    },
+    {
+      "i": 34,
+      "task": "click",
+      "start_us": 110000000,
+      "end_us": 112000000
+    },
+    {
+      "i": 35,
+      "task": "click",
+      "start_us": 113000000,
+      "end_us": 115000000
+    },
+    {
+      "i": 36,
+      "task": "click",
+      "start_us": 116000000,
+      "end_us": 118000000
+    },
+    {
+      "i": 37,
+      "task": "click",
+      "start_us": 119000000,
+      "end_us": 121000000
+    },
+    {
+      "i": 38,
+      "task": "click",
+      "start_us": 122000000,
+      "end_us": 124000000
+    },
+    {
+      "i": 39,
+      "task": "click",
+      "start_us": 125000000,
+      "end_us": 127000000
+    },
+    {
+      "i": 40,
+      "task": "click",
+      "start_us": 128000000,
+      "end_us": 130000000
+    },
+    {
+      "i": 41,
+      "task": "click",
+      "start_us": 131000000,
+      "end_us": 133000000
+    },
+    {
+      "i": 42,
+      "task": "click",
+      "start_us": 134000000,
+      "end_us": 136000000
+    },
+    {
+      "i": 43,
+      "task": "click",
+      "start_us": 137000000,
+      "end_us": 139000000
+    },
+    {
+      "i": 44,
+      "task": "click",
+      "start_us": 140000000,
+      "end_us": 142000000
+    },
+    {
+      "i": 45,
+      "task": "click",
+      "start_us": 143000000,
+      "end_us": 145000000
+    },
+    {
+      "i": 46,
+      "task": "click",
+      "start_us": 146000000,
+      "end_us": 148000000
+    },
+    {
+      "i": 47,
+      "task": "click",
+      "start_us": 149000000,
+      "end_us": 151000000
+    },
+    {
+      "i": 48,
+      "task": "click",
+      "start_us": 152000000,
+      "end_us": 154000000
+    },
+    {
+      "i": 49,
+      "task": "click",
+      "start_us": 155000000,
+      "end_us": 157000000
+    }
+  ]
+}

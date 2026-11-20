@@ -48,3 +48,15 @@ def test_draw_marks_the_frame_and_skips_done():
     assert (img == 40).all()
     guide.draw(img, "palm", "go", 2.2)
     assert (img != 40).any()
+
+
+@pytest.mark.parametrize("mover", ["right", "left"])
+def test_click_guide_is_one_hand_that_pinches_then_releases(mover):
+    def gap(t):
+        (hand,) = guide.scene("click", t, mover)["hands"]
+        return float(np.linalg.norm(hand[4] - hand[8])) / guide.SIZE
+
+    assert gap(0.5) > 0.3                       # ready: open
+    assert gap(1.4) < 0.05                      # thumb on index
+    assert gap(2.5) > 0.3                       # released before the rep ends
+    assert guide.scene("click", 0.5, mover)["target"] is None

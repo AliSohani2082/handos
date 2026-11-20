@@ -98,6 +98,11 @@ impl Pointer {
         }
     }
 
+    /// A pinch holds the pointer (pending click, drag or scroll).
+    pub fn is_active(&self) -> bool {
+        self.active.is_some()
+    }
+
     pub fn pressed(&self) -> &PressedSet {
         &self.pressed
     }

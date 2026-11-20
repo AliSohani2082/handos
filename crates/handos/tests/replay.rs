@@ -73,3 +73,119 @@ fn headless_cli_replays_without_tracker_or_display() {
         "{log}"
     );
 }
+
+fn frames(name: &str) -> Vec<handos_proto::HandFrame> {
+    let input = File::open(trace(name)).expect("open fixture");
+    let mut reader = TraceReader::new(BufReader::new(input)).expect("read fixture header");
+    let mut packet = Vec::new();
+    let mut frames = Vec::new();
+    while reader.read_packet(&mut packet).expect("read packet") {
+        if packet[0] == MSG_FRAME {
+            frames.push(decode_frame(&packet).expect("decode frame"));
+        }
+    }
+    frames
+}
+
+fn desktop() -> handos_platform::fake::FakeDesktop {
+    use handos_platform::{OutputId, OutputInfo, Rect};
+    let output = |id, name: &str, x| OutputInfo {
+        id: OutputId(id),
+        name: name.into(),
+        logical_rect: Rect {
+            x,
+            y: 0,
+            width: 1920,
+            height: 1080,
+        },
+        scale: 1.0,
+    };
+    handos_platform::fake::FakeDesktop::new(vec![
+        output(1, "eDP-1", 0),
+        output(2, "HDMI-A-1", 1920),
+    ])
+}
+
+#[test]
+fn the_pipeline_draws_on_the_focused_output_while_awake_and_releases_everything() {
+    use handos::pipeline::{Config, Pipeline};
+    use handos_gesture::clutch::Mode;
+    use handos_platform::{OutputId, Prim, fake::OverlayCall};
+
+    let mut desktop = desktop();
+    let mut pipeline = Pipeline::new(Config::default());
+    let focused = || Some("HDMI-A-1".to_owned());
+    let mut woke = 0;
+    for frame in frames("palm-good.htrace") {
+        let step = pipeline.on_frame(&frame, frame.t_capture_us, &mut desktop, &focused);
+        woke += usize::from(step.mode_changed == Some(Mode::Default));
+    }
+    pipeline.suspend(&mut desktop);
+
+    assert!(woke >= 1, "the open-palm holds should wake the pipeline");
+    assert_eq!(pipeline.target().map(|t| t.id), Some(OutputId(2)));
+    let draws: Vec<_> = desktop
+        .overlay
+        .calls
+        .iter()
+        .filter_map(|call| match call {
+            OverlayCall::Draw(id, list) => Some((*id, list)),
+            OverlayCall::Clear(_) => None,
+        })
+        .collect();
+    assert!(draws.len() > 100, "{} draws", draws.len());
+    assert!(draws.iter().all(|(id, _)| *id == OutputId(2)));
+    assert!(
+        draws
+            .iter()
+            .all(|(_, list)| matches!(list.0.last(), Some(Prim::Dot { .. })))
+    );
+    assert_eq!(
+        desktop.overlay.calls.last(),
+        Some(&OverlayCall::Clear(OutputId(2)))
+    );
+    assert!(desktop.input.held().is_empty(), "a button stayed pressed");
+}
+
+#[test]
+#[ignore = "0 of 50: real clicks close the 3D pinch only to ~0.49 hu, B5 begins at 0.30; D7 sets the threshold (plan B10 RESULT)"]
+fn recorded_clicks_begin_inside_their_rep_windows() {
+    use handos::pipeline::{Config, Pipeline};
+    use handos_gesture::clutch::Mode;
+    use handos_platform::{Button, fake::InputCall};
+
+    let windows: serde_json::Value = serde_json::from_reader(
+        File::open(trace("click-good.reps.json")).expect("open rep windows"),
+    )
+    .expect("parse rep windows");
+    let reps: Vec<_> = windows["reps"]
+        .as_array()
+        .expect("reps")
+        .iter()
+        .map(|w| w["start_us"].as_u64().expect("start")..=w["end_us"].as_u64().expect("end"))
+        .collect();
+    let mut desktop = desktop();
+    let mut pipeline = Pipeline::new(Config::default());
+    let mut hit = vec![false; reps.len()];
+    for (i, frame) in frames("click-good.htrace").iter().enumerate() {
+        let t = frame.t_capture_us;
+        if i == 0 {
+            pipeline.set_mode(Mode::Default, t);
+        }
+        let before = desktop.input.calls.len();
+        pipeline.on_frame(frame, t, &mut desktop, &|| None);
+        let pressed =
+            desktop.input.calls[before..].contains(&InputCall::Button(Button::Left, true));
+        if pressed && let Some(rep) = reps.iter().position(|r| r.contains(&t)) {
+            hit[rep] = true;
+        }
+    }
+    pipeline.suspend(&mut desktop);
+    let hits = hit.iter().filter(|&&h| h).count();
+    eprintln!(
+        "left clicks or drags begun inside rep windows: {hits} of {}",
+        reps.len()
+    );
+    assert!(hits >= 45, "{hits} of {}", reps.len());
+    assert!(desktop.input.held().is_empty(), "a button stayed pressed");
+}

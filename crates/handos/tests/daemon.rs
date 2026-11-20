@@ -41,6 +41,7 @@ sock.recv(1024)
     let mut daemon = Daemon(
         Command::new(binary)
             .arg("daemon")
+            .arg("--headless")
             .arg("--tracker")
             .arg(&tracker)
             .arg("--record")
@@ -62,6 +63,7 @@ sock.recv(1024)
 
     let second = Command::new(binary)
         .arg("daemon")
+        .arg("--headless")
         .env("XDG_RUNTIME_DIR", runtime.path())
         .output()
         .expect("start second daemon");

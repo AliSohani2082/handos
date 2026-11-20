@@ -7,3 +7,15 @@ publish.workspace = true
 
 [lints]
 workspace = true
+
+[features]
+default = ["gpu"]
+# The wgpu backend. `handos-platform` turns it off so the trait crate never builds the GPU stack.
+gpu = ["dep:wgpu", "dep:pollster", "dep:bytemuck", "dep:raw-window-handle", "dep:thiserror"]
+
+[dependencies]
+wgpu = { workspace = true, optional = true }
+pollster = { workspace = true, optional = true }
+bytemuck = { workspace = true, optional = true }
+raw-window-handle = { workspace = true, optional = true }
+thiserror = { workspace = true, optional = true }

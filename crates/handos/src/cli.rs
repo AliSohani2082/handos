@@ -11,12 +11,15 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Command {
-    /// Receive and record live hand tracking data.
+    /// Track hands and drive the pointer and overlay.
     Daemon {
         #[arg(long)]
         record: Option<PathBuf>,
         #[arg(long, default_value = "handos-tracker-mp")]
         tracker: PathBuf,
+        /// No Wayland: frames run through the pipeline, nothing is drawn or sent (tests, CI).
+        #[arg(long)]
+        headless: bool,
     },
     /// Record or replay landmark packets.
     Trace {
@@ -34,7 +37,11 @@ pub enum TraceCommand {
         file: PathBuf,
         #[arg(long, default_value_t = 1.0)]
         speed: f64,
+        /// No Wayland: nothing is drawn and the pointer does not move.
         #[arg(long)]
         headless: bool,
+        /// Start awake instead of waiting for the open-palm wake gesture.
+        #[arg(long)]
+        awake: bool,
     },
 }

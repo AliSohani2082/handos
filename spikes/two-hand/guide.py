@@ -10,6 +10,9 @@ Two tasks, both with one hand staying still (the receiver) and the other moving 
          Scored as: thumb-index gap under 0.3 palm-sizes while that pinch point is within 0.5
          palm-sizes of a fingertip of the other hand, 2+ frames.
 
+  click  One hand only (M1 Task B10): open, then a quick thumb-to-index pinch and release, like
+         a mouse click. Records the fixture for the pointer's 3D pinch threshold.
+
 Rep timeline (3 s): 0-1 s READY (hands apart), then a 2 s window with the motion above.
 
   uv run guide.py --task palm  [--mover right|left]   loop the animation in a window (no camera)
@@ -48,6 +51,12 @@ INSTRUCTIONS = {
         "               INDEX FINGERTIP, close thumb onto index to pinch it, hold ~0.5 s,",
         "               then pull away with the pinch still closed.",
     ],
+    "click": [
+        "PINCH CLICK  (50 reps; one hand, the other rests out of view)",
+        "  Hand       : your pointer hand, open, palm to the camera, at chest height.",
+        "  Each rep   : 1 s ready (hand open), then in the next 2 s touch thumb tip to index tip",
+        "               firmly and let go at once, like a mouse click. Keep the hand where it is.",
+    ],
 }
 
 
@@ -56,6 +65,7 @@ INSTRUCTIONS = {
 PROMPTS = {
     "palm": {"ready": "ready: hands apart, index pointing", "go": "TOUCH the centre of your palm"},
     "pluck": {"ready": "ready: hands apart, thumb+index open", "go": "PINCH the other index tip"},
+    "click": {"ready": "ready: hand open", "go": "CLICK: thumb to index, release"},
 }
 REP_SECONDS = 3.0  # the animation is authored for a 3 s rep and scaled to the real rep length
 
@@ -115,6 +125,17 @@ def scene(task: str, t: float, mover: str = "right") -> dict:
 
     g = t - 1.0
     pinch = 0.0
+    if task == "click":
+        if g < 0:
+            pinch = 0.0
+        elif g < 0.25:
+            pinch = smooth(g / 0.25)
+        elif g < 0.5:
+            pinch = 1.0
+        elif g < 0.8:
+            pinch = 1 - smooth((g - 0.5) / 0.3)
+        mov = to_px(hand_unit(mover, 0.25, 0.35, 0.0, pinch), mov_c)
+        return {"hands": [mov], "target": pinch_point(mov) if pinch > 0 else None}
     if task == "palm":
         target = palm_centre(rec)
         if g < 0:
@@ -175,7 +196,7 @@ def draw(img: np.ndarray, task: str, phase: str, rep_t: float, mover: str = "rig
 
 def main(argv=None) -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--task", choices=["palm", "pluck"], required=True)
+    ap.add_argument("--task", choices=["palm", "pluck", "click"], required=True)
     ap.add_argument("--mover", choices=["right", "left"], default="right")
     ap.add_argument("--png", type=Path, help="write a contact sheet here instead of opening a window")
     args = ap.parse_args(argv)
